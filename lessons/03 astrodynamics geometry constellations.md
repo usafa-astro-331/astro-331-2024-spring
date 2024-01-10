@@ -41,7 +41,7 @@ This is not an astrodynamics class, but we must account for astrodynamics in lif
 
 What are end-of-life options? Who enforces that?
 
-![image-20230817161435039](sources/image-20230817161435039.png)
+![image-20230817161435039](sources/disposal_options.png)
 
 
 
@@ -214,7 +214,7 @@ $$
 $$
 
 $$
-\tan \eta = \frac{\sin \rho \sin \lambda}{1-\sin\rho \cos\lambda} 
+\tan \eta = \frac{\sin \rho \sin \lambda}{1-\sin\rho \cos\lambda}
 $$
 
 $$
