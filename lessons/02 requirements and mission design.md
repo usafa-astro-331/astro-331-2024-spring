@@ -46,14 +46,13 @@ brief overview of git
 
 **sourcetree** provides good overview of project—good for visualizing more complicated changes
 
-
-![image-20230815182617060](sources/image-20230815182617060.png)
+![image-20230815182617060](sources/sourcetree.png)
 
 
 
 **tortoisegit** convenient windows explorer integration
 
-![image-20230815183044981](sources/image-20230815183044981.png)
+![image-20230815183044981](sources/tortoisegit.png)
 
 
 
