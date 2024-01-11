@@ -172,6 +172,12 @@ Spacecraft lifetime varies due to ballistic coefficient and solar activity.
 
 ![https://agupubs.onlinelibrary.wiley.com/doi/full/10.1002/swe.20064#](sources/historical_solar_flux.jpg)
 
+![DOI:[10.1007/s11207-020-01689-x](https://link.springer.com/article/10.1007/s11207-020-01689-x)](sources/historical_solar_flux2.jpg)
+
+![https://ntrs.nasa.gov/api/citations/19890006590/downloads/19890006590.pdf](sources/flux_drag.png)
+
+
+
 ISS altitude 1998–2014
 
 ![image-20230817162307245](sources/ISS_height_1.png)
