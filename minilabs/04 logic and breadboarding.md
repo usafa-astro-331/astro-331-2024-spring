@@ -64,6 +64,14 @@ The breadboard for this lab already has four IC chips installed. You will connec
 
 ![breadboard](sources/familiarization_bb.svg)
 
+
+
+| OR                    | AND                     | NOT                     |
+| --------------------- | ----------------------- | ----------------------- |
+| ![OR](sources/OR.svg) | ![AND](sources/AND.svg) | ![NOT](sources/NOT.svg) |
+
+
+
 ## Power
 
 You will power your circuit with a benchtop DC power supply. 
