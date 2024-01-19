@@ -26,25 +26,28 @@ The symbols display correctly in marktext and typora.
 
 The three primary logic operators used with Boolean logic are AND, OR, and NOT. 
 
-| Type                                                         | Distinctive shape <br />(IEEE Std 91/91a-1991) | [Boolean algebra](https://en.wikipedia.org/wiki/Boolean_algebra) | [Truth table](https://en.wikipedia.org/wiki/Truth_table)    |
-| ------------------------------------------------------------ | ---------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------- |
-| **[AND](https://en.wikipedia.org/wiki/AND_gate)**            | ![AND](sources/AND.svg)                        | $A \cdot B$                                                      | `A B Q`<br />`0 0 0`<br />`0 1 0`<br />`1 0 0`<br />`1 1 1` |
-| **[OR](https://en.wikipedia.org/wiki/OR_gate)**              | ![OR](sources/OR.svg)                          | $A+B$                                                            | `A B Q`<br />`0 0 0`<br />`0 1 1`<br />`1 0 1`<br />`1 1 1` |
-| **[NOT](https://en.wikipedia.org/wiki/NOT_gate)** (inverter) | ![NOT](sources/NOT.svg)                        | $\bar{A}$                                                        | `A Q`<br />`0 1`<br />`1 0`                                 |
+| Type                                                         | Distinctive shape <br />(IEEE Std 91/91a-1991) | [Boolean <br />algebra <br />symbol](https://en.wikipedia.org/wiki/Boolean_algebra) | [Truth table](https://en.wikipedia.org/wiki/Truth_table)    | programming <br />symbol |
+| ------------------------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------- | ------------------------ |
+| **[AND](https://en.wikipedia.org/wiki/AND_gate)**            | ![AND](sources/AND.svg)                        | $A \cdot B$                                                  | `A B Q`<br />`0 0 0`<br />`0 1 0`<br />`1 0 0`<br />`1 1 1` | &                        |
+| **[OR](https://en.wikipedia.org/wiki/OR_gate)**              | ![OR](sources/OR.svg)                          | $A+B$                                                        | `A B Q`<br />`0 0 0`<br />`0 1 1`<br />`1 0 1`<br />`1 1 1` | \|                       |
+| **[NOT](https://en.wikipedia.org/wiki/NOT_gate)** (inverter) | ![NOT](sources/NOT.svg)                        | $\bar{A}$ or $A’$                                            | `A Q`<br />`0 1`<br />`1 0`                                 | ~  or  !  or  <>         |
 
 Boolean algebra also has its own laws/rules. You will use these to simplify complex statements. 
 
-| AND                             | OR                                   | law or rule          |
-| ------------------------------- | ------------------------------------ | -------------------- |
-| X•0  = 0                        | X+1  = 1                             | Annulment            |
-| X•1  = X                        | X+0  = X                             | Identity             |
-| X•X  = X                        | X+X  = X                             | Idempotent           |
-| X•X’ =  0                       | X+ X’ =  1                           | Complement           |
-| (X’)’=  X                       |                                      | Double  Negation     |
-| X•Y  = Y•X                      | X+Y  = Y+X                           | Commutative          |
-| X(YZ)  = (XY)Z =   (XZ)Y  = XYZ | X+(Y+Z)  = (X+Y)+Z = (X+Z)+Y = X+Y+Z | Associative          |
-| X•(Y+Z)  = XY+XZ                | X+YZ  = (X+Y)•(X+Z)                  | Distributive         |
-| (X•Y)’ =X’ +Y’                  | (X+Y)’ =X’ •Y’                       | de  Morgan’s Theorem |
+| AND                           | OR                                  | law or rule          |
+| ----------------------------- | ----------------------------------- | -------------------- |
+| X•0 = 0                       | X+1 = 1                             | Annulment            |
+| X•1 = X                       | X+0 = X                             | Identity             |
+| X•X = X                       | X+X = X                             | Idempotent           |
+| X•X’ =  0                     | X+ X’ = 1                           | Complement           |
+| (X’)’ = X                     |                                     | Double  Negation     |
+| X•Y = Y•X                     | X+Y = Y+X                           | Commutative          |
+| X(YZ) = (XY)Z =   (XZ)Y = XYZ | X+(Y+Z) = (X+Y)+Z = (X+Z)+Y = X+Y+Z | Associative          |
+| X•(Y+Z) = XY+XZ               | X+YZ  = (X+Y)•(X+Z)                 | Distributive         |
+| (X•Y)’ = X’+Y’                | (X+Y)’ = X’•Y’                      | de  Morgan’s Theorem |
+| X(X+Y) = X                    | X+X’Y = X+Y                         |                      |
+
+
 
 Many additional gates are possible. 
 
