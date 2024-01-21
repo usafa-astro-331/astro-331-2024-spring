@@ -106,7 +106,4 @@ The simplest thing to do is check voltages down the chain of your circuit to see
 
 ## homework
 
-- by next lesson: complete the assignment given on the in-class handout (`04 digital logic handout.docx`)
-- by next lesson: watch these soldering tutorials
-  - https://youtu.be/-qk-ulz05J8
-  - https://youtu.be/eHu_fGAyNY4
+- skills review due next lesson
