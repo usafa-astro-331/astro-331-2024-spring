@@ -124,7 +124,7 @@ find:
 
 
 
-![10 payloads and budgets](sources/10 payloads and budgets.svg)
+![10 payloads and budgets](sources/10%20payloads and%20budgets.svg)
 
 
 
