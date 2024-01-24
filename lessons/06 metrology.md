@@ -129,7 +129,7 @@ How many bits is this example?
 #### equations
 
 $$
-Discrete \# = A_{min} + (A_{max}-A_{min}) \left( \frac{Digital\#}{2^n} + \frac{1}{2^{n+1}}  \right)
+Discrete\ num = A_{min} + (A_{max}-A_{min}) \left( \frac{Digital\ num}{2^n} + \frac{1}{2^{n+1}}  \right)
 $$
 
 $$
