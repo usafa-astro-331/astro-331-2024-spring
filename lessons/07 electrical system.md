@@ -114,10 +114,16 @@ other relevant systems:
 ### electricity fundamentals
 
 Ohm’s law
+
+
 $$
 V = IR
 $$
+
+
 Power
+
+
 $$
 P = IV = I^2 R = V^2 /R
 $$
@@ -154,6 +160,8 @@ household:
 
 
 ![nmb wire (romex)](sources/nmb.jpg)
+
+![](sources/nema 5-15.jpg)
 
 #### safety
 
@@ -246,7 +254,7 @@ What is the consequence of $\eta$?
 
 characteristic power profile of solar cells
 
-![SMAD](sources/image-20230829234519344.png)
+![SMAD](sources/IV_curve.png)
 
 This is for an array. What would it look like for a single cell? 
 
@@ -342,7 +350,7 @@ new: $\eta$ = round trip efficiency
 
 
 
-![image-20230830002224029](sources/image-20230830002224029.png)
+![image-20230830002224029](sources/battery_DOD.png)
 
 
 
