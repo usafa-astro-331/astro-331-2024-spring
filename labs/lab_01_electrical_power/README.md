@@ -29,10 +29,9 @@ In your post-lab analysis, you will compare your prelab predictions to the resul
 
 - Arduino IDE
 - Arduino SAMD drivers (already installed)
-- Arduino libraries (`install_libraries.bat`)
-  - liquidcrystal
+- ensure these Arduino libraries are installed
   - adafruit ina219
-
+  
 - `lab_01_electrical_power.ino`
 
 
@@ -41,11 +40,6 @@ In your post-lab analysis, you will compare your prelab predictions to the resul
 
 Connect components
 
-- 16 x 2 character LCD
-  - power and ground as shown
-  - pin 3 to ground through a 1k$\ohm$ resistor
-  - 6x data lines as listed in `LCD_pins.h`
-    - appears as tab in arduino IDE
 - INA219 current sensor breakout board
   - solar panel rails as shown
   - QWIIC cable as listed in `INA219_pins.h`
@@ -90,7 +84,7 @@ Open serial monitor (tools -> serial monitor).
 
 Expose the solar panel to the halogen light. 
 
-Slowly turn the potentiometer and watch the current and voltage change on the LCD. 
+Slowly turn the potentiometer.
 
 Disconnect the Arduino and turn off the halogen light. 
 
@@ -106,7 +100,7 @@ Take FlatSAT and the luxmeter outside and find a test site in direct sunlight.
 
 Point the luxmeter toward the sun and record the sun's power in lux. You will have to adjust the range to its maximum setting. The measured value may jump around, try to take an average value. Record the average for later use calculating efficiency. 
 
-Point FlatSAT at the sun and power it on. *Very* slowly (slower than you’re thinking), turn the potentiometer from one end to the other. FlatSAT will record current and voltage at 500 ms intervals. Record periodic current and voltage measurements from the LCD display as a backup in case the stored data gets corrupted or lost. 
+Point FlatSAT at the sun and power it on. *Very* slowly (slower than you’re thinking), turn the potentiometer from one end to the other. FlatSAT will record current and voltage at 200 ms intervals. 
 
 Remove the potentiometer to record a measurement of $V_{oc}$. Short the potentiometer pins with a wire to record a measurement of $I_{sc}$. 
 

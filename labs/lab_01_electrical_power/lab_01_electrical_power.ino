@@ -1,12 +1,3 @@
-#include <LiquidCrystal.h>
-// initialize the library by associating any needed LCD interface pin
-// with the arduino pin number it is connected to
-
-#include "LCD_pins.h"
-
-LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
-
-
 #include <Adafruit_INA219.h>
 Adafruit_INA219 ina219;
 
@@ -27,10 +18,6 @@ void setup() {
   // while(!Serial);
   Serial.println("test");
 
-  lcd.begin(16,2); // size of parallel lcd is 16x2 characters
-  
-
-
   // Initialize the INA219.
   // By default the initialization will use the largest range (32V, 2A).  However
   // you can call a setCalibration function to change this range (see comments).
@@ -49,9 +36,7 @@ void setup() {
   // see if the card is present and can be initialized:
   if (!SD.begin(chipSelect)) {
     Serial.println("Card failed, or not present");
-    lcd.setCursor(0,0);
-    lcd.print("card failed"); 
-    
+  
     // don't do anything more:
     while (1);
   }
@@ -77,7 +62,7 @@ struct electrical_measurement
 // prototype function for INA219 reading
 electrical_measurement INA219reading() ;
 
-  int interval = 500; // writes measurements every XX ms
+  int interval = 200; // writes measurements every XX ms
   int present = millis(); 
   int due = present += interval; 
 
@@ -120,15 +105,6 @@ if (averaging_index >= num_samples){
     write_line += ", ";
     write_line += voltage;
     
-    lcd.setCursor(0,0);
-    lcd.print(current); 
-    lcd.setCursor(5,0);
-    lcd.print("mA");
-    lcd.setCursor(0,1);
-    lcd.print(voltage); 
-    lcd.setCursor(6,1);
-    lcd.print("V");
-
     File dataFile = SD.open("iv_curve.csv", FILE_WRITE);
               // if the file is available, write to it:
               if (dataFile) {
@@ -140,8 +116,6 @@ if (averaging_index >= num_samples){
               // if the file isn't open, pop up an error:
               else {
                 Serial.println("error opening datalog.txt");
-                lcd.setCursor(0,0);
-                lcd.print("card failed"); 
               } // end if dataFile
 
 Serial.println(write_line);
