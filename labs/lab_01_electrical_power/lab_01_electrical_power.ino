@@ -83,7 +83,7 @@ if (averaging_index >= num_samples){
 
   present = millis(); 
   if (present >= due){
-    String write_line = "";
+    String write_line = "time:";
     write_line += present; 
     
     // INA219
@@ -96,9 +96,9 @@ if (averaging_index >= num_samples){
     
     current = current / float(num_samples); 
     voltage = voltage / float(num_samples);
-    write_line += ", ";
+    write_line += ", current:";
     write_line += current; 
-    write_line += ", ";
+    write_line += ", voltage:";
     write_line += voltage;
     
     File dataFile = SD.open("iv_curve.csv", FILE_WRITE);
