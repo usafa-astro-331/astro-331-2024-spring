@@ -13,7 +13,11 @@ Adafruit_INA219 ina219;
 #include <SPI.h>
 #include <SD.h>
 
-const int chipSelect = SDCARD_SS_PIN;
+#ifdef ARDUINO_TEENSY41 
+  const int chipSelect = BUILTIN_SDCARD;
+#else
+  const int chipSelect = SDCARD_SS_PIN;
+#endif
 
 
 void setup() {
