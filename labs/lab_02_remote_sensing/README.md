@@ -28,7 +28,7 @@ Prelab report instructions are available on overleaf: [https://www.overleaf.com/
   - Arduino IDE
   - Arduino SAMD drivers (already installed)
 
-- install these Arduino libraries 
+- ensure these Arduino libraries are installed
   - ArduCAM
 
 
@@ -54,7 +54,7 @@ Connect components
 
 ArduCAM-M-2MP communicates with Arduino using both I2C and SPI. The Arduino sketch handles these protocols with the `Wire` and `SPI` libraries. I2C: sensor configuration. SPI: camera commands and data stream (images). 
 
-Note the orientation of the connections in the diagram: the camera board should be vertical with the sensor looking away from the LCD (towards the bottom of the diagram image. 
+Note the orientation of the connections in the diagram: the camera board should be vertical with the sensor looking towards the bottom of the diagram image. 
 
 
 
