@@ -48,12 +48,11 @@ void loop() {
 
   volt_counts = analogRead(volt_in);
 
-  volts = volt_counts * 1.0;
+  volts = volt_counts * 1;
 
-  Serial.print(millis()); 
-
-  Serial.print(", ");
-  Serial.println(volts); 
+  Serial.print("time_(ms):"); Serial.print(millis()); Serial.print(", ");
+  Serial.print("voltage_(counts):"); Serial.print(volts); 
+  Serial.println();
   
   delay(100); // wait 100 ms so you're not flooded with data
 } // end function loop()
