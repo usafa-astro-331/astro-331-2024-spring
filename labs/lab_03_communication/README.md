@@ -4,9 +4,9 @@ In this lab you will build FlatSAT's communication system including the onboard 
 
 In this lab one laptop will serve as FlatSAT's ground station. The ground station computer will send commands to the spacecraft over an XBee serial link. 
 
-One additional laptop will be used to power FlatSAT. 
+One additional laptop is required to power FlatSAT. 
 
-
+prelab report instructions: [https://www.overleaf.com/read/qksywqwkjcqb#3d1ec1](https://www.overleaf.com/read/qksywqwkjcqb#3d1ec1)
 
 ## equipment
 
