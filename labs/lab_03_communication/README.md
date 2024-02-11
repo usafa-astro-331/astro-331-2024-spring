@@ -44,30 +44,7 @@ One additional laptop will be used to power FlatSAT.
 
 instructions: https://www.overleaf.com/read/qksywqwkjcqb 
 
-%%{ init: { 'flowchart': { 'curve': 'stepAfter' } } }%%
 
-graph TD;
-
-    RV_to_COE---junction1[ ]
-    style junction1 height:0px;
-    
-    junction1---wgs84data; 
-    junction1---id1[input function];
-    junction1---ElOrb
-    junction1---OrbParams;
-    junction1---id2[output function];
-    
-    ElOrb---junction2[ ]
-    style junction2 height:0px;
-    
-    junction2---hnevec; 
-    junction2---sizeshape;
-    junction2---angles;
-
-%% Defining the styles
-    classDef Red fill:#FF9999;
-%% Assigning styles to nodes
-    class wgs84data,RV_to_COE,ElOrb Red;
 
 ## overview
 
@@ -110,7 +87,7 @@ Each XBee radio maintains a record of the signal strength of the last message it
   - as listed in `xbee_pins.h`
 
 - Add LED and 220 Ω resistor 
-  - as listed in `LED_pins.h`
+  - as listed in `LED_pins.cpp`
   - LEDs are directional—short leg of LED connects to ground through resistor
   - LEDs will burn out without a resistor
   
