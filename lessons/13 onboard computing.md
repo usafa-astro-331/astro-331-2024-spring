@@ -168,6 +168,7 @@ Perseverance:
 
 - landed 2021
 - BAE RAD750 
+  - $200,000 (2024 price)
   - state of the art in 1998
   - 200 MHz
   - 1 lb

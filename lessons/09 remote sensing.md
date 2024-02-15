@@ -31,11 +31,16 @@ There is a lab next lesson.
 
 - prelab report (individual) due next lesson
   - see lab instructions for link to prelab report instructions
-  
+
+
+### optical payloads lesson
+
+### graphics
 
 
 
-## remote sensing
+
+## remote sensing/optical payloads
 
 you already know resolution! goals today
 
@@ -183,21 +188,21 @@ What do you know about resolution? What is it? Which is better, bigger or smalle
 
 ##### spatial
 
-![Designing Space Missions and Systems](sources/image-20230903143855021.png)
+![Designing Space Missions and Systems](sources/spatial_resolution.png)
 
-![image-20230903143930816](sources/image-20230903143930816.png)
+![image-20230903143930816](sources/USAFA_overhead.png)
 
 ##### spectral
 
-![image-20230903214437753](sources/image-20230903214437753.png)
+![image-20230903214437753](sources/reflected_spectra.png)
 
 ##### radiance
 
-![Designing Space Missions and Systems](sources/image-20230903214533550.png)
+![Designing Space Missions and Systems](sources/radiance.png)
 
 ##### temporal
 
-![image-20230903214626349](sources/image-20230903214626349.png)
+![image-20230903214626349](sources/flood.png)
 
 Digital Globe images of Pacific Junction, Iowa (Mar 2019)
 
