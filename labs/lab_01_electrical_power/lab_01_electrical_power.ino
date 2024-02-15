@@ -6,7 +6,7 @@ Adafruit_INA219 ina219;
 
 #ifdef ARDUINO_TEENSY41 
   const int chipSelect = BUILTIN_SDCARD;
-#else
+#else // Arduino MKR Zero
   const int chipSelect = SDCARD_SS_PIN;
 #endif
 
