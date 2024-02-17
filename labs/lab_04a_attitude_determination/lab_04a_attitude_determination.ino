@@ -177,9 +177,12 @@ void loop() {
     sunnx_reading = analogRead(sunnx_pin);
     sunny_reading = analogRead(sunny_pin);    
     
-    // find direction
-    
+    // // find direction
+    // north =   // you fill in here
+    // east =   // you fill in here
+    // heading = atan2(north, -east*1.0) * RAD_TO_DEG + 180; 
 
+    // output sun sensor data
     write_line += ", sunpx:"; 
     write_line += sunpx_reading; 
     write_line += ", sunpy:"; 

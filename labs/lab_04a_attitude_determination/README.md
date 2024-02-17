@@ -92,6 +92,10 @@ Darken the room and shine a flashlight at FlatSAT from any point in the x-y plan
 
 Now you will modify the code to obtain a rough sun direction from the photocells. 
 
+Create an algorithm to find the magnitude of the north/anti-north value and the east/anti-east value. 
+
+Change the write_line to output the heading. 
+
 
 
 ``` c++
@@ -101,9 +105,12 @@ Now you will modify the code to obtain a rough sun direction from the photocells
     sunnx_reading = analogRead(sunnx_pin);
     sunny_reading = analogRead(sunny_pin);    
     
-// find direction 
+    // // find direction
+    // north =   // you fill in here
+    // east =   // you fill in here
+    // heading = atan2(north, -east*1.0) * RAD_TO_DEG + 180; 
 
-
+	// output sun sensor data
     write_line += ", sunpx:"; 
     write_line += sunpx_reading; 
     write_line += ", sunpy:"; 
