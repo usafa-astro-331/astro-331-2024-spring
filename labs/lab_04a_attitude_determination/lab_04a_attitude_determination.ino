@@ -106,7 +106,7 @@ int t0 = millis();  // set start time right before loop
 
 // write accel data (to SD and/or serial) every `write_interval` ms
 int last_wrote = 0;
-int write_interval = 100;  // ms
+int write_interval = 250;  // ms
 
 
 String printFormattedFloat(float val, uint8_t leading, uint8_t decimals) {
@@ -169,7 +169,7 @@ void loop() {
     // Serial.print(", ");
 
     myICM.getAGMT();                        // The values are only updated when you call 'getAGMT'
-    write_line += printScaledAGMT(&myICM);  // This function takes into account the scale settings from when the measurement was made to calculate the values with units
+    // write_line += printScaledAGMT(&myICM);  // This function takes into account the scale settings from when the measurement was made to calculate the values with units
 
     // read sun sensors
     sunpx_reading = analogRead(sunpx_pin);
@@ -178,16 +178,14 @@ void loop() {
     sunny_reading = analogRead(sunny_pin);    
     
     // find direction
+    north = sunny_reading - sunpy_reading; 
+    east = sunnx_reading - sunpx_reading; 
     
+    heading = atan2(north, -east*1.0) * RAD_TO_DEG + 180; 
 
-    write_line += ", sunpx:"; 
-    write_line += sunpx_reading; 
-    write_line += ", sunpy:"; 
-    write_line += sunpy_reading; 
-    write_line += ", sunnx:"; 
-    write_line += sunnx_reading; 
-    write_line += ", sunny:"; 
-    write_line += sunny_reading; 
+    write_line += ", heading:"; 
+    write_line += heading;
+    
     
     Serial.println(write_line);
 
