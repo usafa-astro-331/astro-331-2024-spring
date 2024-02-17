@@ -56,7 +56,9 @@ For today’s lab, FlatSAT will be powered by a 12 V lithium ion battery. The (f
 
 
 
-Copy the setup below, but **do not place the 3rd (middle) cell into the battery holder yet**. 
+Copy the setup below. **Do not place the 3rd (middle) cell into the battery holder yet**. 
+
+- you will not need the green motor controller yet
 
 
 
@@ -66,7 +68,7 @@ Copy the setup below, but **do not place the 3rd (middle) cell into the battery 
 
 - Add the red 9 DOF IMU (red square) to your FlatSAT as in the diagram.
   - use a QWIIC cable to connect via the current sensor
-- Add 4 photocell voltage dividers. The photocell is R1. 
+- Add 4 photocell voltage dividers near the top right (where the LCD is shown). The photocell is R1. 
   - ![](../../minilabs/06_metrology/sources/Resistive_divider2.svg)
   - Vin: 3 V
   - Ground: ground

@@ -1,12 +1,4 @@
 
-// motor connections
-// black = as described previously (motor controller)
-// red = as described previously (motor controller)
-// green = ground (ground for quadrature encoder--wheel speed sensor)
-// blue = 3.3V (power for quadrature encoder--wheel speed sensor)
-// white = 6 (signal from quadrature encoder--wheel speed sensor)--defined below
-// yellow = A2 (signal from quadrature encoder--wheel speed sensor)--defined below
-
 int sunpx_reading, sunpy_reading, sunnx_reading, sunny_reading; 
 int north, east; 
 float sun_direction; 
