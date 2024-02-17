@@ -66,44 +66,53 @@ Copy the setup below, but **do not place the 3rd (middle) cell into the battery 
 
 - Add the red 9 DOF IMU (red square) to your FlatSAT as in the diagram.
   - use a QWIIC cable to connect via the current sensor
-- Add 4 photocell voltage dividers
+- Add 4 photocell voltage dividers. The photocell is R1. 
   - ![](../../minilabs/06_metrology/sources/Resistive_divider2.svg)
   - Vin: 3 V
   - Ground: ground
   - Vout: see `sun_sensor_pins.h`
     - use pinouts defined for Arduino MKR Zero
-
-  - point 4 photocells in 4 different directions (in the x-y plane)
-
-
+    - align +x (px), +y (py), -x (nx), -y (ny) with the IMU’s magnetometer coordinate frame
+    
 
 
-## attitude determination
 
-Now you will test FlatSAT's attitude sensor as the spacecraft attitude changes. 
+## sensor checkout
 
-Install an SD card into FlatSAT. Open and upload `lab_04a_attitude_determination.ino`. Open the serial plotter. Cover the photocells one at a time and observe the sun sensors change. Rotate FlatSAT about the z-axis and observe the z-axis gyroscope data and the x- and y-axis magnetometer data. Ensure they all change. Disconnect the USB cable from FlatSAT. 
+Ensure you are collecting meaningful data from FlatSAT’s sensors. 
 
-Using a string loop, hang the motor platform from the hook above your workstation. Place FlatSAT and the battery holder on the platform and secure with tape. Insert all battery cells and connect the 5V output to FlatSAT’s Vin pin. 
 
-Darken the room and shine a flashlight at FlatSAT from any point in the x-y plane. Gently spin FlatSAT several times. Rotate it back and forth and ensure you get at least 3 complete revolutions uninterrupted. 
 
-## calibration
+Install SD card. Connect FlatSAT via USB and upload `lab_04a_attitude_determination.ino`. Open the serial plotter. 
+
+Rotate FlatSat as you shine a light at it. 
+
+- x- and y-magnetometer data should wander up and down with orientation
+- gyroscope data should spike as you rotate
+- sun sensors should each rise when pointed toward light and fall when covered
+
+
+
+## integrate sun sensor
 
 Now you will modify the code to obtain a rough sun direction from the photocells. 
 
+Create an equation/algorithm to find the magnitude of sun’s brightness in the north/anti-north direction and the east/anti-east direction. 
 
+Uncomment the bottom lines of this code segment and add your algorithm.
+
+Comment out the “output raw sun sensor data” section. (Highlight all, `ctrl`-`/`.)
+
+Upload your modified code and test with a flashlight. 
 
 ``` c++
-// read sun sensors
+    // read sun sensors
     sunpx_reading = analogRead(sunpx_pin);
     sunpy_reading = analogRead(sunpy_pin);
     sunnx_reading = analogRead(sunnx_pin);
     sunny_reading = analogRead(sunny_pin);    
     
-// find direction 
-
-
+    // output raw sun sensor data
     write_line += ", sunpx:"; 
     write_line += sunpx_reading; 
     write_line += ", sunpy:"; 
@@ -112,7 +121,25 @@ Now you will modify the code to obtain a rough sun direction from the photocells
     write_line += sunnx_reading; 
     write_line += ", sunny:"; 
     write_line += sunny_reading; 
+
+    // // find sun direction
+    // north =  ; // you fill in here--remember to end line with ;
+    // east =  ; // you fill in here--remember to end line with ;
+    // sun_direction = atan2(east*1.0, -north) * RAD_TO_DEG + 180; 
+    // write_line += ", sun:"; 
+    // write_line += sun_direction; 
 ```
+
+
+
+
+## attitude determination
+
+Using a string loop, hang the motor platform from the hook above your workstation. Place FlatSAT and the battery holder on the platform and secure with tape. Insert all battery cells and connect the BEC’s 5V output to FlatSAT’s Vin pin. 
+
+Gently spin FlatSAT several times. Ensure you get at least 3 complete revolutions uninterrupted. Also spin it it back and forth several times. 
+
+Spin FlatSAT quickly (at least 1 RPM). 
 
 
 
@@ -120,16 +147,13 @@ Now you will modify the code to obtain a rough sun direction from the photocells
 
 - Transfer saved data to your group's storage location
 - Disconnect devices from FlatSAT and all computers
-- Remove the ESD wrist straps and replace them in the bag at your lab station.
 - Replace all items at your lab station the way you found them. 
-- Close Arduino IDE, and log out of the laptop.
 - Have your instructor check off your lab station before you depart.
+
+
 
 ## Post-lab data analysis
 
-Use your measured mass properties and the provided max speed/acceleration data to determine reaction wheel torque. 
+For the next lab the magnetometer data will be an input to the spacecraft’s attitude system. To use it, you must calibrate the magnetometer data. 
 
-Use your recorded attitude data to determine the MOI of the entire FlatSAT assembly. Do this with the wheel speed data and IMU data immediately before and after the wheel turned off. 
-
-Include graphs of IMU data (magnetometer AND rate gyro) in your final report. 
-
+Use the magnetometer data you gathered to find the gain and bias of your magnetometers. 

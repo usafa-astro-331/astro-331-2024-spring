@@ -87,12 +87,24 @@ void setup() {
   // if the file isn't open, pop up an error:
   else { Serial.println("error opening datalog.txt"); }
 
-  Serial.println("time (ms), gyr z (dps), mag x (uT), mag y (uT), sun N (count), sun E (count), sun S (count), sun W (count) ");
+  Serial.println("units:");
+  Serial.println("time (ms)");
+  Serial.println("gyr (dps)");
+  Serial.println("mag (uT)");
+  Serial.println("sun detector (count)");
+  Serial.println("sun angle (deg)");
+  
 
-  dataFile = SD.open("attitude.csv", FILE_WRITE);
+  dataFile = SD.open("04a_attitude.csv", FILE_WRITE);
   // if the file is available, write to it:
   if (dataFile) {
-    dataFile.println("time (ms), gyr z (dps), mag x (uT), mag y (uT), sun N (count), sun E (count), sun S (count), sun W (count) ");
+      dataFile.println("units:");
+      dataFile.println("time (ms)");
+      dataFile.println("gyr (dps)");
+      dataFile.println("mag (uT)");
+      dataFile.println("sun detector (count)");
+      dataFile.println("sun angle (deg)");
+
     dataFile.close();
   }
 
@@ -116,7 +128,7 @@ String printFormattedFloat(float val, uint8_t leading, uint8_t decimals) {
     write_line += "-";
     // SERIAL_PORT.print("-");
   } else {
-    write_line += " ";
+    write_line += "+";
     // SERIAL_PORT.print(" ");
   }
   for (uint8_t indi = 0; indi < leading; indi++) {
@@ -177,15 +189,22 @@ void loop() {
     sunnx_reading = analogRead(sunnx_pin);
     sunny_reading = analogRead(sunny_pin);    
     
-    // find direction
-    north = sunny_reading - sunpy_reading; 
-    east = sunnx_reading - sunpx_reading; 
-    
-    heading = atan2(north, -east*1.0) * RAD_TO_DEG + 180; 
+    // // output raw sun sensor data
+    // write_line += ", sunpx:"; 
+    // write_line += sunpx_reading; 
+    // write_line += ", sunpy:"; 
+    // write_line += sunpy_reading; 
+    // write_line += ", sunnx:"; 
+    // write_line += sunnx_reading; 
+    // write_line += ", sunny:"; 
+    // write_line += sunny_reading; 
 
-    write_line += ", heading:"; 
-    write_line += heading;
-    
+    // find sun direction
+    north =  sunpx_reading - sunnx_reading; // you fill in here--remember to end line with ;
+    east =  sunpy_reading - sunny_reading; // you fill in here--remember to end line with ;
+    sun_direction = atan2(east*1.0, -north) * RAD_TO_DEG + 180; 
+    write_line += ", sun:"; 
+    write_line += sun_direction; 
     
     Serial.println(write_line);
 
