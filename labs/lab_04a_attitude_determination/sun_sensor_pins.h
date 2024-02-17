@@ -9,7 +9,7 @@
 
 int sunpx_reading, sunpy_reading, sunnx_reading, sunny_reading; 
 int north, east; 
-float heading; 
+float sun_direction; 
 
 #ifdef ARDUINO_TEENSY41
   static int sunpx_pin = 24; 
