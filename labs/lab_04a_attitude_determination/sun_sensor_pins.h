@@ -7,8 +7,9 @@
 // white = 6 (signal from quadrature encoder--wheel speed sensor)--defined below
 // yellow = A2 (signal from quadrature encoder--wheel speed sensor)--defined below
 
-int sunpx_reading, sunpy_reading, sunnx_reading, sunny_reading;
-
+int sunpx_reading, sunpy_reading, sunnx_reading, sunny_reading; 
+int north, east; 
+float heading; 
 
 #ifdef ARDUINO_TEENSY41
   static int sunpx_pin = 24; 
