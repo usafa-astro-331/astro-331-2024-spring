@@ -1,41 +1,34 @@
-// ----- ICM 20948 IMU
-#include <ICM_20948.h>  // Click here to get the library: http://librarymanager/All#SparkFun_ICM_20948_IMU
 
 #define SERIAL_PORT Serial
 #define WIRE_PORT Wire  // Your desired Wire port.      Used when "USE_SPI" is not defined
-// The value of the last bit of the I2C address.
-// On the SparkFun 9DoF IMU breakout the default is 1, and when the ADR jumper is closed the value becomes 0
-#define AD0_VAL 1
 
-ICM_20948_I2C myICM;
+// ----- ICM 20948 IMU
+  #include <ICM_20948.h>  // Click here to get the library: http://librarymanager/All#SparkFun_ICM_20948_IMU
+  ICM_20948_I2C myICM;
+  // The value of the last bit of the I2C address.
+  // On the SparkFun 9DoF IMU breakout the default is 1, and when the ADR jumper is closed the value becomes 0
+  #define AD0_VAL 1
+  #include "IMU_pins.h"
+  #include "./mag_params.h"
 
 
 // ----- TB9051FTG Motor Carrier
-#include <TB9051FTGMotorCarrier.h>
+  #include <TB9051FTGMotorCarrier.h>
 
-// include quadrature encoder for motor position
-// Teensy is not compatible with QuadratureEncoder/Hardware Interrupt 
-//   but comes with its own Encoder library
-#ifdef ARDUINO_TEENSY41
+// ------ quadrature encoder for motor position
+  // Teensy is not compatible with QuadratureEncoder/Hardware Interrupt
+  //   but comes with its own Encoder library
+  #ifdef ARDUINO_TEENSY41
   #include <Encoder.h>
-#else  // Arduino MKR Zero
+  #else  // Arduino MKR Zero
   #include <QuadratureEncoder.h>
   // NOTE: QuadratureEncoder requires <EnableInterrupt.h>
-#endif
-
-
-#include "IMU_pins.h"
-#include "motor_controller_pins.h"
-
-// // TB9051FTGMotorCarrier pin definitions
-// static constexpr uint8_t pwm1Pin{2};
-// static constexpr uint8_t pwm2Pin{3};
-
-// Instantiate TB9051FTGMotorCarrier
-static TB9051FTGMotorCarrier driver{ pwm1Pin, pwm2Pin };
-
-// set up variable for pulse width modulation of motor
-static float throttlePWM{ 0.0f };
+  #endif
+  #include "motor_controller_pins.h"
+  // Instantiate TB9051FTGMotorCarrier
+    static TB9051FTGMotorCarrier driver{ pwm1Pin, pwm2Pin };
+  // set up variable for pulse width modulation of motor
+    static float throttlePWM{ 0.0f };
 
 unsigned long lastMilli = 0;
 long currentEncoderCount = 0;
@@ -46,22 +39,32 @@ long timeElapsed = 0;
 float speed_pwm;
 
 // ----- SD card -----
-#include <SD.h>
+  #include <SD.h>
+  #ifdef ARDUINO_TEENSY41
+    const int chipSelect = BUILTIN_SDCARD;
+  #else  // Arduino MKR Zero
+    const int chipSelect = SDCARD_SS_PIN;
+  #endif
+  File dataFile;
 
-#ifdef ARDUINO_TEENSY41
-const int chipSelect = BUILTIN_SDCARD;
-#else  // Arduino MKR Zero
-const int chipSelect = SDCARD_SS_PIN;
-#endif
 
-
-// ----- time variables -----
-int print_time = 0;
-int print_delay = 500;
+// ----- time variables ----- for open loop motor speed control
+// int print_time = 0;
+// int print_delay = 500;
 int current_time = 0;
 int elapsed = 0;
 
-File dataFile;
+// PID 
+// #include <PID_v1.h>
+#include "src/PID/attitude_PID.h"
+// double Setpoint, Input, Output;
+
+// PID myPID(&Input, &Output, &Setpoint,2,5,1,P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
+                                                            //P_ON_E (Proportional on Error) is the default behavior
+
+double HeadingSetpoint, HeadingInput, dHeadingInput, Output; 
+PID myPID(&HeadingInput, &dHeadingInput, &Output, &HeadingSetpoint, 2, 5, 1, P_ON_E, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
+//                                                             //P_ON_E (Proportional on Error) is the default behavior
 
 void setup() {
   SERIAL_PORT.begin(115200);
@@ -92,8 +95,7 @@ void setup() {
   // ----- TB9051FTG Motor Carrier
   driver.enable();
 
-
-  // put your setup code here, to run once:
+  // LED for state indication
   pinMode(A0, OUTPUT);
 
   Serial.print("Initializing SD card...");
@@ -106,37 +108,127 @@ void setup() {
   }
   Serial.println("card initialized.");
 
-  dataFile = SD.open("datalog.txt", FILE_WRITE);
+  dataFile = SD.open("04b_attitude.dat", FILE_WRITE);
   // if the file is available, write to it:
   if (dataFile) {
-    dataFile.println("start of data");
-    dataFile.println("current (mA), voltage (V)");
+    String write_line = "";
+    write_line += "units:\n";
+    write_line += "time (ms)\n";
+    write_line += "gyr (dps)\n";
+    write_line += "mag (uT)\n";
+    write_line += "sun detector (count)\n";
+    write_line += "sun angle (deg)\n";
+
+    dataFile.print(write_line);
+
+    Serial.print(write_line);
+
     dataFile.close();
   }
   // if the file isn't open, pop up an error:
-  else { Serial.println("error opening datalog.txt"); }
-
-  Serial.println("time (ms),gyr z (dps), mag x (uT), mag y (uT), wheel (RPM)");
-
-  dataFile = SD.open("attitude.csv", FILE_WRITE);
-  // if the file is available, write to it:
-  if (dataFile) {
-    dataFile.println("time (ms), gyrz (dps), magx (uT), magy (uT), wheel (RPM)");
-    dataFile.close();
+  else {
+    Serial.println("error opening datalog.txt");
   }
 
+// initialize PID
+myICM.getAGMT();
+magx =  (myICM.magX() - x_bias) * x_gain; 
+magy =  (myICM.magY() - y_bias) * y_gain; 
+HeadingInput = atan2(magy, -magx) +PI; 
+dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
+HeadingSetpoint = 90; 
+myPID.SetMode(AUTOMATIC); 
+myPID.SetOutputLimits(0.1, 1.0);
 
 }  // end function setup
 
 int speed;
 
+int PID_interval = 10;
+int last_PID_time;
 int t;
 int t0 = millis();  // set start time right before loop
 
 // write accel data (to SD and/or serial) every `write_interval` ms
 int last_wrote = 0;
-int write_interval = 100;  // ms
+int write_interval = 300;  // ms
 
+void loop() {
+  t = millis();
+
+    myICM.getAGMT();  // The values are only updated when you call 'getAGMT'
+
+    magx =  (myICM.magX() - x_bias) * x_gain; 
+    magy =  (myICM.magY() - y_bias) * y_gain; 
+    HeadingInput = atan2(magy, -magx) +PI; 
+    dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
+
+
+    myPID.Compute(); 
+
+
+
+  // speed_pwm = set_speed(Output);
+
+  driver.setOutput(Output);
+
+  if (t - last_wrote >= write_interval) {
+    String write_line = "t:";
+    write_line += t;
+    write_line += ", gyr:";
+    // Serial.print(write_line);
+    // Serial.print(", ");
+
+    myICM.getAGMT();  // The values are only updated when you call 'getAGMT'
+    //write_line += printScaledAGMT(&myICM);  // This function takes into account the scale settings from when the measurement was made to calculate the values with units
+
+    write_line += myICM.gyrZ();
+// Serial.print(myICM.gyrZ());
+// Serial.print(", accel:");
+// Serial.print(myICM.accX());
+
+// Read current encoder count
+// different libraries for Teensy/MKR Zero have different syntax
+#ifdef ARDUINO_TEENSY41
+    currentEncoderCount = myEnc.read();
+#else  // Arduino MKR Zero
+    currentEncoderCount = Encoder.getEncoderCount();
+#endif
+
+    // Determine how much time has elapsed since last measurement
+    timeElapsed = millis() - lastMilli;
+    // Calculate speed in rpm
+    // encoder is 64 counts per rev
+    // motor is 10:1 geared
+    // counts/ms * 1 rev/64 counts * 1000 ms/1 sec * 60 s/1 min * 1 rot/10 gears = rev/min
+    write_line += float(currentEncoderCount - lastEncoderCount) / timeElapsed / 64 * 1000 * 60 / 10;
+    // reset variables to most recent value
+    lastMilli = millis();
+    lastEncoderCount = currentEncoderCount;
+    // Print to serial monitor
+    // Serial.print("Time (ms) = ");
+    //     Serial.print(lastMilli);
+    //     Serial.print(", Speed (RPM) = ");
+    Serial.println(write_line);
+
+    File dataFile = SD.open("attitude.csv", FILE_WRITE);
+    // if the file is available, write to it:
+    if (dataFile) {
+      dataFile.println(write_line);
+      dataFile.close();
+
+    }
+    // if the file isn't open, pop up an error:
+    else {
+      Serial.println("error opening attitude.csv");
+    }
+
+
+
+    last_wrote += write_interval;
+  }
+
+}  // end loop()
 
 float set_speed() {
   t = millis() - t0;
@@ -196,6 +288,23 @@ float set_speed() {
   return throttlePWM;
 }  // end set_speed()
 
+String printScaledAGMT(ICM_20948_I2C *sensor) {
+  // SERIAL_PORT.print("Gyr (DPS) [ ");
+  String write_line = "";
+  write_line += printFormattedFloat(sensor->gyrZ(), 5, 2);
+  // SERIAL_PORT.print(" ], Mag (uT) [ ");
+  write_line += ", ";
+  // SERIAL_PORT.print(", ");
+  write_line += printFormattedFloat(sensor->magX(), 5, 2);
+  // SERIAL_PORT.print(", ");
+  write_line += ", ";
+  write_line += printFormattedFloat(sensor->magY(), 5, 2);
+  // SERIAL_PORT.print(" ]");
+  write_line += ", ";
+  // SERIAL_PORT.print(", ");
+  return write_line;
+}
+
 String printFormattedFloat(float val, uint8_t leading, uint8_t decimals) {
   String write_line = "";
   float aval = abs(val);
@@ -232,89 +341,3 @@ String printFormattedFloat(float val, uint8_t leading, uint8_t decimals) {
   }
   return write_line;
 }  //end printformattedfloat()
-
-String printScaledAGMT(ICM_20948_I2C *sensor) {
-  // SERIAL_PORT.print("Gyr (DPS) [ ");
-  String write_line = "";
-  write_line += printFormattedFloat(sensor->gyrZ(), 5, 2);
-  // SERIAL_PORT.print(" ], Mag (uT) [ ");
-  write_line += ", ";
-  // SERIAL_PORT.print(", ");
-  write_line += printFormattedFloat(sensor->magX(), 5, 2);
-  // SERIAL_PORT.print(", ");
-  write_line += ", ";
-  write_line += printFormattedFloat(sensor->magY(), 5, 2);
-  // SERIAL_PORT.print(" ]");
-  write_line += ", ";
-  // SERIAL_PORT.print(", ");
-  return write_line;
-}
-
-
-
-void loop() {
-  t = millis();
-
-
-
-
-
-  speed_pwm = set_speed();
-
-
-
-
-
-
-  if (t - last_wrote > write_interval) {
-    String write_line = "";
-    write_line += t;
-    write_line += ", ";
-    // Serial.print(write_line);
-    // Serial.print(", ");
-
-    myICM.getAGMT();                        // The values are only updated when you call 'getAGMT'
-    write_line += printScaledAGMT(&myICM);  // This function takes into account the scale settings from when the measurement was made to calculate the values with units
-
-    // Read current encoder count
-    // different libraries for Teensy/MKR Zero have different syntax
-    #ifdef ARDUINO_TEENSY41
-      currentEncoderCount = myEnc.read(); 
-    #else  // Arduino MKR Zero
-      currentEncoderCount = Encoder.getEncoderCount();
-    #endif  
-    
-    // Determine how much time has elapsed since last measurement
-    timeElapsed = millis() - lastMilli;
-    // Calculate speed in rpm
-    // encoder is 64 counts per rev
-    // motor is 10:1 geared
-    // counts/ms * 1 rev/64 counts * 1000 ms/1 sec * 60 s/1 min * 1 rot/10 gears = rev/min
-    write_line += float(currentEncoderCount - lastEncoderCount) / timeElapsed / 64 * 1000 * 60 / 10;
-    // reset variables to most recent value
-    lastMilli = millis();
-    lastEncoderCount = currentEncoderCount;
-    // Print to serial monitor
-    // Serial.print("Time (ms) = ");
-    //     Serial.print(lastMilli);
-    //     Serial.print(", Speed (RPM) = ");
-    Serial.println(write_line);
-
-    File dataFile = SD.open("attitude.csv", FILE_WRITE);
-    // if the file is available, write to it:
-    if (dataFile) {
-      dataFile.println(write_line);
-      dataFile.close();
-
-    }
-    // if the file isn't open, pop up an error:
-    else {
-      Serial.println("error opening attitude.csv");
-    }
-
-
-
-    last_wrote += write_interval;
-  }
-
-}  // end loop()

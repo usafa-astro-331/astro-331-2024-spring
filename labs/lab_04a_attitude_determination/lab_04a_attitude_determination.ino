@@ -9,16 +9,8 @@
 
 ICM_20948_I2C myICM;
 
-
 #include "IMU_pins.h"
 #include "./sun_sensor_pins.h"
-
-
-unsigned long lastMilli = 0;
-long currentEncoderCount = 0;
-long lastEncoderCount = 0;
-float speed_rpm = 0.0;
-long timeElapsed = 0;
 
 // ----- SD card -----
 #include <SD.h>
@@ -28,13 +20,6 @@ const int chipSelect = BUILTIN_SDCARD;
 #else  // Arduino MKR Zero
 const int chipSelect = SDCARD_SS_PIN;
 #endif
-
-
-// ----- time variables -----
-int print_time = 0;
-int print_delay = 500;
-int current_time = 0;
-int elapsed = 0;
 
 File dataFile;
 
@@ -64,9 +49,6 @@ void setup() {
     }
   }
 
-  // put your setup code here, to run once:
-  // pinMode(A0, OUTPUT);
-
   Serial.print("Initializing SD card...");
   // see if the card is present and can be initialized:
   if (!SD.begin(chipSelect)) {
@@ -77,41 +59,29 @@ void setup() {
   }
   Serial.println("card initialized.");
 
-  dataFile = SD.open("datalog.txt", FILE_WRITE);
+  dataFile = SD.open("04a_attitude.dat", FILE_WRITE);
   // if the file is available, write to it:
   if (dataFile) {
-    dataFile.println("start of data");
-    dataFile.println("current (mA), voltage (V)");
+    String write_line = ""; 
+    write_line += "units:\n" ;
+    write_line += "time (ms)\n"; 
+    write_line += "gyr (dps)\n"; 
+    write_line += "mag (uT)\n"; 
+    write_line += "sun detector (count)\n"; 
+    write_line += "sun angle (deg)\n";
+
+    dataFile.print(write_line);
+
+    Serial.print(write_line);
+
     dataFile.close();
   }
   // if the file isn't open, pop up an error:
-  else { Serial.println("error opening datalog.txt"); }
-
-  Serial.println("units:");
-  Serial.println("time (ms)");
-  Serial.println("gyr (dps)");
-  Serial.println("mag (uT)");
-  Serial.println("sun detector (count)");
-  Serial.println("sun angle (deg)");
-  
-
-  dataFile = SD.open("04a_attitude.csv", FILE_WRITE);
-  // if the file is available, write to it:
-  if (dataFile) {
-      dataFile.println("units:");
-      dataFile.println("time (ms)");
-      dataFile.println("gyr (dps)");
-      dataFile.println("mag (uT)");
-      dataFile.println("sun detector (count)");
-      dataFile.println("sun angle (deg)");
-
-    dataFile.close();
+  else { Serial.println("error opening datalog.txt"); 
   }
-
 
 }  // end function setup
 
-int speed;
 
 int t;
 int t0 = millis();  // set start time right before loop
@@ -159,7 +129,7 @@ String printFormattedFloat(float val, uint8_t leading, uint8_t decimals) {
 }  //end printformattedfloat()
 
 String printScaledAGMT(ICM_20948_I2C *sensor) {
-  String write_line = "gyrz:";
+  String write_line = ", gyrz:";
   write_line += printFormattedFloat(sensor->gyrZ(), 5, 2);
   write_line += ", magx:";
   write_line += printFormattedFloat(sensor->magX(), 5, 2);
@@ -169,16 +139,12 @@ String printScaledAGMT(ICM_20948_I2C *sensor) {
   return write_line;
 }
 
-
 void loop() {
   t = millis();
 
   if (t - last_wrote > write_interval) {
     String write_line = "t:";
     write_line += t;
-    write_line += ", ";
-    // Serial.print(write_line);
-    // Serial.print(", ");
 
     myICM.getAGMT();                        // The values are only updated when you call 'getAGMT'
     write_line += printScaledAGMT(&myICM);  // This function takes into account the scale settings from when the measurement was made to calculate the values with units
