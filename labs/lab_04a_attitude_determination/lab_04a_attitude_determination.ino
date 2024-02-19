@@ -59,7 +59,7 @@ void setup() {
   }
   Serial.println("card initialized.");
 
-  dataFile = SD.open("04a_attitude.dat", FILE_WRITE);
+  dataFile = SD.open("04a_attitude_determination.dat", FILE_WRITE);
   // if the file is available, write to it:
   if (dataFile) {
     String write_line = ""; 
@@ -174,7 +174,7 @@ void loop() {
     
     Serial.println(write_line);
 
-    File dataFile = SD.open("attitude.csv", FILE_WRITE);
+    File dataFile = SD.open("04a_attitude_determination.dat", FILE_WRITE);
     // if the file is available, write to it:
     if (dataFile) {
       dataFile.println(write_line);

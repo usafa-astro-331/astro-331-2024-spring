@@ -104,16 +104,16 @@ void setup() {
   }
   Serial.println("card initialized.");
 
-  dataFile = SD.open("04b_attitude.dat", FILE_WRITE);
+  dataFile = SD.open("04b_attitude_control.dat", FILE_WRITE);
   // if the file is available, write to it:
   if (dataFile) {
     String write_line = "";
     write_line += "units:\n";
     write_line += "time (ms)\n";
-    write_line += "gyr (dps)\n";
-    write_line += "mag (uT)\n";
-    write_line += "sun angle (deg)\n";
-
+    write_line += "heading (rad)\n";
+    write_line += "gyrZ (rad/s)\n";
+    write_line += "wheel speed (RPM)\n";
+s
     dataFile.print(write_line);
 
     Serial.print(write_line);
@@ -158,8 +158,6 @@ void loop() {
     HeadingInput = atan2(magy, -magx) +PI; 
     dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
 
-
-
     #ifdef USEPID
       myPID.Compute(); 
       driver.setOutput(Output);
@@ -171,17 +169,10 @@ void loop() {
   if (t - last_wrote >= write_interval) {
     String write_line = "t:";
     write_line += t;
+    write_line += ", head:";
+    write_line += HeadingInput;
     write_line += ", gyr:";
-    // Serial.print(write_line);
-    // Serial.print(", ");
-
-    myICM.getAGMT();  // The values are only updated when you call 'getAGMT'
-    //write_line += printScaledAGMT(&myICM);  // This function takes into account the scale settings from when the measurement was made to calculate the values with units
-
-    write_line += myICM.gyrZ();
-// Serial.print(myICM.gyrZ());
-// Serial.print(", accel:");
-// Serial.print(myICM.accX());
+    write_line += dHeadingInput;
 
 // Read current encoder count
 // different libraries for Teensy/MKR Zero have different syntax
@@ -191,12 +182,14 @@ void loop() {
     currentEncoderCount = Encoder.getEncoderCount();
 #endif
 
+    // print wheel speed
     // Determine how much time has elapsed since last measurement
     timeElapsed = millis() - lastMilli;
     // Calculate speed in rpm
     // encoder is 64 counts per rev
     // motor is 10:1 geared
     // counts/ms * 1 rev/64 counts * 1000 ms/1 sec * 60 s/1 min * 1 rot/10 gears = rev/min
+    write_line += ", ω:";
     write_line += float(currentEncoderCount - lastEncoderCount) / timeElapsed / 64 * 1000 * 60 / 10;
     // reset variables to most recent value
     lastMilli = millis();
@@ -205,9 +198,10 @@ void loop() {
     // Serial.print("Time (ms) = ");
     //     Serial.print(lastMilli);
     //     Serial.print(", Speed (RPM) = ");
+    
     Serial.println(write_line);
 
-    File dataFile = SD.open("attitude.csv", FILE_WRITE);
+    File dataFile = SD.open("04b_attitude_control.dat", FILE_WRITE);
     // if the file is available, write to it:
     if (dataFile) {
       dataFile.println(write_line);
@@ -216,10 +210,8 @@ void loop() {
     }
     // if the file isn't open, pop up an error:
     else {
-      Serial.println("error opening attitude.csv");
+      Serial.println("error opening file on SD card");
     }
-
-
 
     last_wrote += write_interval;
   }
@@ -288,56 +280,3 @@ float set_speed() {
   return throttlePWM;
 }  // end set_speed()
 
-String printScaledAGMT(ICM_20948_I2C *sensor) {
-  // SERIAL_PORT.print("Gyr (DPS) [ ");
-  String write_line = "";
-  write_line += printFormattedFloat(sensor->gyrZ(), 5, 2);
-  // SERIAL_PORT.print(" ], Mag (uT) [ ");
-  write_line += ", ";
-  // SERIAL_PORT.print(", ");
-  write_line += printFormattedFloat(sensor->magX(), 5, 2);
-  // SERIAL_PORT.print(", ");
-  write_line += ", ";
-  write_line += printFormattedFloat(sensor->magY(), 5, 2);
-  // SERIAL_PORT.print(" ]");
-  write_line += ", ";
-  // SERIAL_PORT.print(", ");
-  return write_line;
-}
-
-String printFormattedFloat(float val, uint8_t leading, uint8_t decimals) {
-  String write_line = "";
-  float aval = abs(val);
-  if (val < 0) {
-    write_line += "-";
-    // SERIAL_PORT.print("-");
-  } else {
-    write_line += " ";
-    // SERIAL_PORT.print(" ");
-  }
-  for (uint8_t indi = 0; indi < leading; indi++) {
-    uint32_t tenpow = 0;
-    if (indi < (leading - 1)) {
-      tenpow = 1;
-    }
-    for (uint8_t c = 0; c < (leading - 1 - indi); c++) {
-      tenpow *= 10;
-    }
-    if (aval < tenpow) {
-      write_line += "0";
-      // SERIAL_PORT.print("0");
-    } else {
-      break;
-    }
-  }
-  if (val < 0) {
-    write_line += -val;
-    write_line += decimals;
-    // SERIAL_PORT.print(-val, decimals);
-  } else {
-    write_line += val;
-    write_line += decimals;
-    // SERIAL_PORT.print(val, decimals);
-  }
-  return write_line;
-}  //end printformattedfloat()
