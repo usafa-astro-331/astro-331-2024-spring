@@ -1,11 +1,14 @@
-# Lab 4: attitude
+# Lab 4b: attitude control
 
-In this lab you will build and test part of FlatSAT's attitude system including an attitude sensor and reaction wheel. (FlatSAT's design calls for 3 reaction wheels but you will only test 1.) You will measure system performance to ensure that FlatSAT can meet it's orbital torque and momentum requirements. 
+In this lab you will improve FlatSAT’s attitude determination system and integrate a reaction wheel for attitude control. (FlatSAT's design calls for 3 reaction wheels but you will only test 1.) You will measure system performance to ensure that FlatSAT can meet orbital torque and momentum requirements. 
+
+The prelab report was due last time. 
 
 
 
-Prelab instructions: 
-https://www.overleaf.com/read/prdzpknpdtgf
+## rotor mass properties
+
+Measure the diameter and mass of the reaction wheel. There is a spare rotor and a scale on the filing cabinets near the door. Use these values to calculate momentum storage and compare your predictions to measurements. 
 
 
 
@@ -15,7 +18,6 @@ https://www.overleaf.com/read/prdzpknpdtgf
 - micro USB cable 
 - string
 - tachometer
-- benchtop power supply
 
 
 
@@ -23,12 +25,8 @@ https://www.overleaf.com/read/prdzpknpdtgf
 
 - FlatSAT
   - components from previous labs
+    - SD card must be inserted
   - TB9051FTG motor controller (green PCB)
-  - SparkFun 9 DOF IMU
-  - reaction wheel assembly
-  - 3 cell Li-ion battery
-  - BEC
-  - wago wire connectors
 
 
 
@@ -45,14 +43,14 @@ https://www.overleaf.com/read/prdzpknpdtgf
 - Arduino IDE
 
 - Arduino SAMD drivers (already installed)
-- Arduino libraries (install via GUI or by running `install_libraries.bat`)
+- ensure the following Arduino libraries are installed
 
-  - SparkFun 9DoF IMU
+  - SparkFun 9DoF IMU (already installed)
   - TB9051FTGMotorCarrier
   - QuadratureEncoder
   - EnableInterrupt
 
-- `lab_04_attitude.ino`
+- `lab_04b_attitude_control.ino`
 
 
 
@@ -64,29 +62,21 @@ For today’s lab, FlatSAT will be powered by a 12 V lithium ion battery. The mo
 
 Copy the setup below, but **do not place the 3rd (middle) cell into the battery holder yet**. 
 
-
-
-**Note:** the connection between the Arduino and the 5V rail has moved from previous labs. It’s now connected to Vin. 
-
 ![attitude_bb](../../fritzing_diagrams/04_attitude_bb.svg)
 
-- place IMU (red square) 
-  - connect to Arduino with QWIIC cable
-  - follow pin/color definitions in `IMU_pins.h`
-- motor driver (green square) 
+- add the motor driver (green square) 
   - connect to Arduino and motor
   - follow pin/color definitions in `motor_controller_pins.h`
-- place an LED on pin A0 and connect it to ground via a resistor—the short leg must connect to ground. 
-
-  - same wiring as in communication lab
 
 ### motor driver
 
 ![motor_driver](sources/motor_driver.jpg)
 
-FlatSAT controls a brushed DC motor via a Toshiba TB9051FTG brushed motor driver. FlatSAT sends a low-volt/low-current pulse-width modulated (PWM) signal to the motor driver board. The driver board provides line voltage to the motor at the same duty cycle. A high signal is full voltage and a low signal is zero voltage, and we use the duty cycle to essentially act as a fraction between those two. So, a 50% duty cycle corresponds to applying 50% of the total voltage that would correspond to the motor’s top speed. Thus, the higher the PWM command, the faster the motor will spin.
+FlatSAT controls a brushed DC motor via a Toshiba TB9051FTG brushed motor driver. The motor driver provides 0–12 V to the motor, modulated to control motor speed. The modulation is controlled by a 3V pulse PWM (pulse width modulation) signal from the Arduino. The higher the PWM command, the faster the motor will spin.
 
 ![img](sources/clip_image002.jpg)
+
+The motor has a hall effect quadrature encoder. FlatSAT uses information from this sensor to identify motor speed. 
 
 
 
@@ -103,35 +93,61 @@ The motor has a 6-wire connector with 2 wires each for motor power, speed encode
 
 
 
-## rotor mass properties
+### LED indicator
 
-Measure the diameter and mass of the reaction wheel. There is a spare rotor and a scale on the filing cabinets near the door. Use these values to calculate momentum storage and compare your predictions to measurements. 
+place an LED on pin A0 and connect it to ground via a resistor—the short leg must connect to ground. 
 
-
-
-## attitude determination
-
-Now you will test FlatSAT's attitude sensor as the reaction wheel changes spacecraft attitude.   
-
-Install an SD card into FlatSAT. Open and upload `lab_04_attitude.ino`. Open the serial plotter and place FlatSAT in different orientations. Wave a magnet around the sensor. Disconnect the USB cable from FlatSAT. 
-
-`lab_04_attitude.ino` will command the wheel to different speeds and record magnetometer and gyroscope data. 
+- same wiring as in communication lab
 
 
 
-Tape FlatSAT to one end of the reaction wheel assembly Tape the battery to the other end.  Using string, hang the assembly from the hook at your workstation. Make it level. 
+**NOTE: do not insert the center battery cell yet.**
 
-When you are ready, connect the BEC's 5 V output to Arduino's Vin. This is what will happen. 
+## magnetometer calibration
 
-- The rotor will spin up and maintain a steady-state speed of approximately 500 RPM for approximately 10 seconds. Hold FlatSAT steady during this time. 
-- The LED will illuminate when FlatSAT is holding still. If it’s drifting you can help it gently. 
-- The LED will deluminate when FlatSAT is accelerating. Don’t touch it. 
-- FlatSAT's wheel speed will ramp up and back down over the course of 5 seconds, ending up at 500 RPM. FlatSAT should hold steady at this orientation for 5 seconds. 
-- FlatSAT's wheel speed will ramp down and back up over the course of 5 seconds, again ending up at 500 RPM. FlatSAT should hold steady at this orientation for 5 seconds. 
-- FlatSAT will command the wheel to zero speed. Allow FlatSAT to spin freely. 
-- After 5 seconds of spinning, stop FlatSAT and remove power. 
+Use the gain and bias values you found using data from lab 04a to calibrate your magnetometer. 
 
-FlatSAT will record information from its rate gyros and magnetometer to `attitude.csv` on the SD card. Remove the SD card and save the data for your team's later use. 
+Replace the magnetometer gain and bias values in `IMU_setup.h`.
+
+```c++
+// gain and bias parameters for magnetometer
+float x_bias = 0; 
+float x_gain = 1; 
+float y_bias = 0; 
+float y_gain = 1; 
+```
+
+Upload `lab_04b_attitude_control.ino` and rotate FlatSAT. Open the serial plotter and watch the heading and gyroscope data change. You should see all heading values from $0–2\pi$. 
+
+
+
+## test reaction wheel
+
+Disconnect FlatSAT. Place it on the reaction wheel platform, suspend it from the hook in a flat attitude. Connect the battery. 
+
+FlatSAT will rotate back and forth over the course of 40 seconds. Use the first 15 seconds to steady FlatSAT with your hands. You want it to be as motionless as possible. 
+
+Watch FlatSAT rotate as the wheel speed changes. After 40 seconds the wheel will stop. Allow FlatSAT to spin freely through at least 3 revolutions. 
+
+Disconnect the battery. 
+
+
+
+## test attitude control
+
+Uncomment the first line of `lab_04b_attitude_control.ino`. It should read `#define USEPID`. 
+
+Upload `lab_04b_attitude_control.ino`. 
+
+Remove the USB cable and connect FlatSAT’s battery. 
+
+Hold FlatSAT still while the reaction wheel begins spinning (5 sec). 
+
+FlatSAT will now attempt to point east by changing the speed of its reaction wheel. After 20 seconds it will attempt to point north. 
+
+While FlatSAT is pointing north, gently apply a disturbance torque in to see if the reaction wheel can counteract it. You should be able to saturate the wheel. 
+
+
 
 ## Lab station cleanup
 

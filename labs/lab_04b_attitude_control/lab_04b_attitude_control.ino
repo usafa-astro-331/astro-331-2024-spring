@@ -135,6 +135,10 @@ HeadingSetpoint = HALF_PI;
 myPID.SetMode(AUTOMATIC); 
 myPID.SetOutputLimits(0.1, 1.0);
 
+// spin reaction wheel to 500 RPM, wait 5 sec
+throttlePWM = 0.5;
+while (millis()<5000){}
+
 }  // end function setup
 
 int speed;

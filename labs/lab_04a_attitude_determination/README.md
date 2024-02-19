@@ -1,10 +1,8 @@
-# Lab 4: attitude
+# Lab 4a: attitude determination
 
-In this lab you will build and test part of FlatSAT's attitude system including an attitude sensor and reaction wheel. (FlatSAT's design calls for 3 reaction wheels but you will only test 1.) You will measure system performance to ensure that FlatSAT can meet it's orbital torque and momentum requirements. 
+In this lab you will build and test FlatSAT's attitude determination system including sun sensors, a magnetometer, and a rate gyroscope. 
 
-
-
-Prelab instructions: 
+Prelab report instructions: 
 https://www.overleaf.com/read/prdzpknpdtgf
 
 
@@ -21,6 +19,7 @@ https://www.overleaf.com/read/prdzpknpdtgf
 
 - FlatSAT
   - components from previous labs
+    - SD card must be inserted
   - SparkFun 9 DOF IMU
   - reaction wheel assembly
   - 3 cell Li-ion battery
@@ -31,8 +30,6 @@ https://www.overleaf.com/read/prdzpknpdtgf
 
 ## documentation
 
-- motor datasheet (Pololu 37D metal gearmotor)
-- motor driver datasheet (Pololu TB905FTG motor driver carrier)
 - IMU datasheet (SparkFun 9DoF IMU)
 
 
@@ -56,9 +53,7 @@ For today’s lab, FlatSAT will be powered by a 12 V lithium ion battery. The (f
 
 
 
-Copy the setup below. **Do not place the 3rd (middle) cell into the battery holder yet**. 
-
-- you will not need the green motor controller yet
+Copy the setup below, but **do not place the 3rd (middle) cell into the battery holder yet**. 
 
 
 
@@ -68,7 +63,7 @@ Copy the setup below. **Do not place the 3rd (middle) cell into the battery hold
 
 - Add the red 9 DOF IMU (red square) to your FlatSAT as in the diagram.
   - use a QWIIC cable to connect via the current sensor
-- Add 4 photocell voltage dividers near the top right (where the LCD is shown). The photocell is R1. 
+- Add 4 photocell voltage dividers. The photocell is R1. 
   - ![](../../minilabs/06_metrology/sources/Resistive_divider2.svg)
   - Vin: 3 V
   - Ground: ground
