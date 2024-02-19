@@ -68,7 +68,7 @@ bool PID::Compute()
       double input = *myInput;
       double error = *mySetpoint - input;
 		if (error > PI) error -= TWO_PI; 
-		else if (error < 0) error += TWO_PI; 
+		else if (error < -PI) error += TWO_PI; 
 		
 	  // // old (came with library)
       // double dInput = (input - lastInput);
