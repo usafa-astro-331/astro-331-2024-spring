@@ -113,7 +113,7 @@ void setup() {
     write_line += "heading (rad)\n";
     write_line += "gyrZ (rad/s)\n";
     write_line += "wheel speed (RPM)\n";
-s
+
     dataFile.print(write_line);
 
     Serial.print(write_line);
