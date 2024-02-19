@@ -1,3 +1,4 @@
+// #define USEPID
 
 #define SERIAL_PORT Serial
 #define WIRE_PORT Wire  // Your desired Wire port.      Used when "USE_SPI" is not defined
@@ -8,8 +9,7 @@
   // The value of the last bit of the I2C address.
   // On the SparkFun 9DoF IMU breakout the default is 1, and when the ADR jumper is closed the value becomes 0
   #define AD0_VAL 1
-  #include "IMU_pins.h"
-  #include "./mag_params.h"
+  #include "IMU_setup.h"
 
 
 // ----- TB9051FTG Motor Carrier
@@ -55,15 +55,11 @@ int current_time = 0;
 int elapsed = 0;
 
 // PID 
-// #include <PID_v1.h>
 #include "src/PID/attitude_PID.h"
-// double Setpoint, Input, Output;
-
-// PID myPID(&Input, &Output, &Setpoint,2,5,1,P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
-                                                            //P_ON_E (Proportional on Error) is the default behavior
-
+double kp=-50, ki=-5, kd=0; 
 double HeadingSetpoint, HeadingInput, dHeadingInput, Output; 
-PID myPID(&HeadingInput, &dHeadingInput, &Output, &HeadingSetpoint, 2, 5, 1, P_ON_E, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
+
+PID myPID(&HeadingInput, &dHeadingInput, &Output, &HeadingSetpoint, kp, ki, kd, P_ON_E, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
 //                                                             //P_ON_E (Proportional on Error) is the default behavior
 
 void setup() {
@@ -116,7 +112,6 @@ void setup() {
     write_line += "time (ms)\n";
     write_line += "gyr (dps)\n";
     write_line += "mag (uT)\n";
-    write_line += "sun detector (count)\n";
     write_line += "sun angle (deg)\n";
 
     dataFile.print(write_line);
@@ -136,7 +131,7 @@ magx =  (myICM.magX() - x_bias) * x_gain;
 magy =  (myICM.magY() - y_bias) * y_gain; 
 HeadingInput = atan2(magy, -magx) +PI; 
 dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
-HeadingSetpoint = 90; 
+HeadingSetpoint = HALF_PI; 
 myPID.SetMode(AUTOMATIC); 
 myPID.SetOutputLimits(0.1, 1.0);
 
@@ -164,13 +159,14 @@ void loop() {
     dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
 
 
-    myPID.Compute(); 
 
-
-
-  // speed_pwm = set_speed(Output);
-
-  driver.setOutput(Output);
+    #ifdef USEPID
+      myPID.Compute(); 
+      driver.setOutput(Output);
+      if (t > 20e3) HeadingSetpoint = 0; 
+    #else // closed loop speed control
+      speed_pwm = set_speed(); 
+    #endif
 
   if (t - last_wrote >= write_interval) {
     String write_line = "t:";
@@ -229,6 +225,10 @@ void loop() {
   }
 
 }  // end loop()
+
+
+
+
 
 float set_speed() {
   t = millis() - t0;
