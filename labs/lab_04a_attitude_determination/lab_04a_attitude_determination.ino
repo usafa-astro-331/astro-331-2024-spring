@@ -168,7 +168,7 @@ void loop() {
     // // find sun direction
     // north =  ; // you fill in here--remember to end line with ;
     // east =  ; // you fill in here--remember to end line with ;
-    // sun_direction = atan2(east*1.0, -north) * RAD_TO_DEG + 180; 
+    // sun_direction = atan2(-east*1.0, -north) * RAD_TO_DEG + 180; 
     // write_line += ", sun:"; 
     // write_line += sun_direction; 
     
