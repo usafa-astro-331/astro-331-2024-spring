@@ -70,16 +70,17 @@ class PID
 	int controllerDirection;
 	int pOn;
 
-    double *myInput;              // * Pointers to the Input, Output, and Setpoint variables
+    // double *myInput;              // * Pointers to the Input, Output, and Setpoint variables
     double *myOutput;             //   This creates a hard link between the variables and the 
-    double *mySetpoint;           //   PID, freeing the user from having to constantly tell us
+    // double *mySetpoint;           //   PID, freeing the user from having to constantly tell us
     double *myHeadingInput;       //   what these values are.  with pointers we'll just know.
 	double *mydHeadingInput; 							  
 	double *myHeadingSetpoint;							  
 								  
 								 
 	unsigned long lastTime;
-	double outputSum, lastInput;
+	double outputSum; //, lastInput;
+	double lastHeadingInput, lastdHeadingInput; 
 
 	unsigned long SampleTime;
 	double outMin, outMax;
