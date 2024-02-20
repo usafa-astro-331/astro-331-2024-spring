@@ -132,12 +132,12 @@ magy =  (myICM.magY() - y_bias) * y_gain;
 HeadingInput = atan2(magy, -magx) +PI; 
 dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
 HeadingSetpoint = HALF_PI; 
-myPID.SetMode(AUTOMATIC); 
 myPID.SetOutputLimits(0.1, 1.0);
+myPID.SetMode(AUTOMATIC); 
 
 // spin reaction wheel to 500 RPM, wait 5 sec
 throttlePWM = 0.5;
-while (millis()<5000){}
+delay(5000); 
 
 }  // end function setup
 
@@ -173,6 +173,10 @@ void loop() {
   if (t - last_wrote >= write_interval) {
     String write_line = "t:";
     write_line += t;
+    write_line += ", magx:";
+    write_line += magx;
+    write_line += ", magy:";
+    write_line += magy;
     write_line += ", head:";
     write_line += HeadingInput;
     write_line += ", gyr:";
@@ -276,7 +280,7 @@ float set_speed() {
   }
 
   else {
-    while (1) {};
+    // while (1) {};
   }
 
   driver.setOutput(throttlePWM);
