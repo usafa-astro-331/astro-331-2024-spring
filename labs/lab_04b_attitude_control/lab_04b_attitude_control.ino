@@ -63,6 +63,13 @@ PID myPID(&HeadingInput, &dHeadingInput, &Output, &HeadingSetpoint, kp, ki, kd, 
 //                                                             //P_ON_E (Proportional on Error) is the default behavior
 
 void setup() {
+
+  // spin reaction wheel to 500 RPM, wait 5 sec
+throttlePWM = 0.5;
+driver.setOutput(throttlePWM);
+delay(5000); 
+
+
   SERIAL_PORT.begin(115200);
   //  while (!SERIAL_PORT)
   //  {
@@ -110,9 +117,12 @@ void setup() {
     String write_line = "";
     write_line += "units:\n";
     write_line += "time (ms)\n";
+    write_line += "magx (uT)\n";
+    write_line += "magy (uT)\n";
     write_line += "heading (rad)\n";
     write_line += "gyrZ (rad/s)\n";
-    write_line += "wheel speed (RPM)\n";
+    write_line += "commanded wheel speed (RPM)\n";
+    write_line += "measured wheel speed (RPM)\n";
 
     dataFile.print(write_line);
 
@@ -125,6 +135,8 @@ void setup() {
     Serial.println("error opening datalog.txt");
   }
 
+
+
 // initialize PID
 myICM.getAGMT();
 magx =  (myICM.magX() - x_bias) * x_gain; 
@@ -132,12 +144,9 @@ magy =  (myICM.magY() - y_bias) * y_gain;
 HeadingInput = atan2(magy, -magx) +PI; 
 dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
 HeadingSetpoint = HALF_PI; 
+Output = 0.5; 
 myPID.SetOutputLimits(0.1, 1.0);
 myPID.SetMode(AUTOMATIC); 
-
-// spin reaction wheel to 500 RPM, wait 5 sec
-throttlePWM = 0.5;
-delay(5000); 
 
 }  // end function setup
 
@@ -164,6 +173,7 @@ void loop() {
 
     #ifdef USEPID
       myPID.Compute(); 
+      speed_pwm = Output; 
       driver.setOutput(Output);
       if (t > 20e3) HeadingSetpoint = 0; 
     #else // closed loop speed control
@@ -182,6 +192,9 @@ void loop() {
     write_line += ", gyr:";
     write_line += dHeadingInput;
 
+    write_line += ", ω_cmd:";
+    write_line += speed_pwm * 1000; // speed in RPM
+    
 // Read current encoder count
 // different libraries for Teensy/MKR Zero have different syntax
 #ifdef ARDUINO_TEENSY41
@@ -197,16 +210,10 @@ void loop() {
     // encoder is 64 counts per rev
     // motor is 10:1 geared
     // counts/ms * 1 rev/64 counts * 1000 ms/1 sec * 60 s/1 min * 1 rot/10 gears = rev/min
-    write_line += ", ω:";
+    write_line += ", ω_meas:";
     write_line += float(currentEncoderCount - lastEncoderCount) / timeElapsed / 64 * 1000 * 60 / 10;
-    // reset variables to most recent value
-    lastMilli = millis();
-    lastEncoderCount = currentEncoderCount;
-    // Print to serial monitor
-    // Serial.print("Time (ms) = ");
-    //     Serial.print(lastMilli);
-    //     Serial.print(", Speed (RPM) = ");
     
+    // Print to serial monitor and file
     Serial.println(write_line);
 
     File dataFile = SD.open("04b_attitude_control.dat", FILE_WRITE);
@@ -220,6 +227,12 @@ void loop() {
     else {
       Serial.println("error opening file on SD card");
     }
+
+
+    // reset variables to most recent value
+    lastMilli = millis();
+    lastEncoderCount = currentEncoderCount;
+    
 
     last_wrote += write_interval;
   }

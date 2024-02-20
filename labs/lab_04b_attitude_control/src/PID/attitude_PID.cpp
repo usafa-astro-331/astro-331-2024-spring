@@ -66,13 +66,13 @@ bool PID::Compute()
    {
       /*Compute all the working error variables*/
       // double input = *myInput;
-	  double HeadingInput = *myHeadingInput; 
-      double error = *myHeadingSetpoint - HeadingInput;
+	  double headinginput = *myHeadingInput; 
+      double error = *myHeadingSetpoint - headinginput;
 		if (error > PI) error -= TWO_PI; 
 		else if (error < -PI) error += TWO_PI; 
 		
 	  // // old (came with library)
-      double dInput = (HeadingInput - lastHeadingInput);
+      double dInput = (headinginput - lastHeadingInput);
 	  // modified to use gyro info
 	  // double dInput = *mydHeadingInput * SampleTime/1000;
 	  
@@ -97,7 +97,7 @@ bool PID::Compute()
 	    *myOutput = output;
 
       /*Remember some variables for next time*/
-      lastHeadingInput = HeadingInput;
+      lastHeadingInput = headinginput;
       lastTime = now;
 	    return true;
    }
