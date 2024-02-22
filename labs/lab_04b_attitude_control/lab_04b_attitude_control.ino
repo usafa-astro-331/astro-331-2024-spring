@@ -1,4 +1,4 @@
-// #define USEPID
+#define USEPID
 
 #define SERIAL_PORT Serial
 #define WIRE_PORT Wire  // Your desired Wire port.      Used when "USE_SPI" is not defined
@@ -62,7 +62,7 @@ int elapsed = 0;
 #include "src/PID/attitude_PID.h"
 double kp=50.0, ki=5.0, kd=0.0; 
 double HeadingSetpoint, HeadingInput, dHeadingInput, Output; 
-PID myPID(&HeadingInput, &dHeadingInput, &Output, &HeadingSetpoint, kp, ki, kd, P_ON_E, REVERSE); //P_ON_M specifies that Proportional on Measurement be used
+PID myPID(&HeadingInput, &dHeadingInput, &Output, &HeadingSetpoint, kp, ki, kd, P_ON_M, REVERSE); //P_ON_M specifies that Proportional on Measurement be used
 //                                                             //P_ON_E (Proportional on Error) is the default behavior
 
 
@@ -74,7 +74,8 @@ driver.setOutput(throttlePWM);
 delay(5000); 
 
 
-  SERIAL_PORT.begin(115200);
+  Serial.begin(115200);
+  Serial1.begin(9600); 
   //  while (!SERIAL_PORT)
   //  {
   //  };
@@ -105,15 +106,15 @@ delay(5000);
   // LED for state indication
   pinMode(A0, OUTPUT);
 
-  Serial.print("Initializing SD card...");
+  Serial1.print("Initializing SD card...");
   // see if the card is present and can be initialized:
   if (!SD.begin(chipSelect)) {
-    Serial.println("Card failed, or not present");
+    Serial1.println("Card failed, or not present");
     // don't do anything more:
     while (1)
       ;
   }
-  Serial.println("card initialized.");
+  Serial1.println("card initialized.");
 
   dataFile = SD.open("04b_attitude_control.dat", FILE_WRITE);
   // if the file is available, write to it:
@@ -130,21 +131,21 @@ delay(5000);
 
     dataFile.print(write_line);
 
-    Serial.print(write_line);
+    Serial1.print(write_line);
 
     dataFile.close();
   }
   // if the file isn't open, pop up an error:
   else {
-    Serial.println("error opening datalog.txt");
+    Serial1.println("error opening datalog.txt");
   }
 
 
 
 // initialize PID
 myICM.getAGMT();
-magx =  (myICM.magX() - x_bias) * x_gain; 
-magy =  (myICM.magY() - y_bias) * y_gain; 
+magx =  (myICM.magX() - x_bias) /x_range; 
+magy =  (myICM.magY() - y_bias) /y_range; 
 HeadingInput = atan2(magy, -magx) +PI; 
 dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
 HeadingSetpoint = HALF_PI; 
@@ -170,34 +171,31 @@ void loop() {
 
     myICM.getAGMT();  // The values are only updated when you call 'getAGMT'
 
-    magx =  (myICM.magX() - x_bias) * x_gain; 
-    magy =  (myICM.magY() - y_bias) * y_gain; 
+    magx =  (myICM.magX() - x_bias) /x_range; 
+    magy =  (myICM.magY() - y_bias) /y_range; 
     HeadingInput = atan2(magy, -magx) +PI; 
     dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
+
+    kp = analogRead(A15)/100.0; 
+    ki = analogRead(A16)/500.0; 
+    kd = analogRead(A17)/10.0; 
+    myPID.SetTunings(kp, ki, kd);
+
+    HeadingSetpoint = analogRead(A14)/1024.* TWO_PI; 
+
+
 
     #ifdef USEPID
       myPID.Compute(); 
       speed_pwm = Output; 
       driver.setOutput(Output);
-      if (t > 20e3) HeadingSetpoint = 0; 
+      // if (t > 20e3) HeadingSetpoint = 0; 
     #else // closed loop speed control
       speed_pwm = set_speed(); 
     #endif
 
   if (t - last_wrote >= write_interval) {
-    String write_line = "t:";
-    write_line += t;
-    write_line += ", magx:";
-    write_line += magx;
-    write_line += ", magy:";
-    write_line += magy;
-    write_line += ", head:";
-    write_line += HeadingInput;
-    write_line += ", gyr:";
-    write_line += dHeadingInput;
-
-    write_line += ", ω_cmd:";
-    write_line += speed_pwm * 1000; // speed in RPM
+    
     
 // Read current encoder count
 // different libraries for Teensy/MKR Zero have different syntax
@@ -214,11 +212,40 @@ void loop() {
     // encoder is 64 counts per rev
     // motor is 10:1 geared
     // counts/ms * 1 rev/64 counts * 1000 ms/1 sec * 60 s/1 min * 1 rot/10 gears = rev/min
-    write_line += ", ω_meas:";
+
+    String write_line = "";
+    // String write_line = "t:";
+    write_line += t;
+    write_line += "\t";
+    // write_line += ", magx:";
+    write_line += magx;
+    write_line += "\t";
+    // write_line += ", magy:";
+    write_line += magy;
+    write_line += "\t";
+    // write_line += ", head:";
+    write_line += HeadingInput;
+    write_line += "\t";
+    // write_line += ", gyr:";
+    write_line += dHeadingInput;
+    write_line += "\t";
+    // write_line += ", ω_cmd:";
+    write_line += speed_pwm * 1000; // speed in RPM
+    write_line += "\t";
+    // write_line += ", ω_meas:";
     write_line += float(currentEncoderCount - lastEncoderCount) / timeElapsed / 64 * 1000 * 60 / 10;
+    write_line += "\t";
+    write_line += kp;
+    write_line += "\t";
+    write_line += ki;
+    write_line += "\t";
+    write_line += kd;
+    write_line += "\t";
+    write_line += HeadingSetpoint;
+    write_line += "\t";
     
     // Print to serial monitor and file
-    Serial.println(write_line);
+    Serial1.println(write_line);
 
     File dataFile = SD.open("04b_attitude_control.dat", FILE_WRITE);
     // if the file is available, write to it:
@@ -229,7 +256,7 @@ void loop() {
     }
     // if the file isn't open, pop up an error:
     else {
-      Serial.println("error opening file on SD card");
+      Serial1.println("error opening file on SD card");
     }
 
 

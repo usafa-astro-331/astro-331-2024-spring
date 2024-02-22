@@ -12,10 +12,19 @@
 // SCL = SCL
 // if not using QWIIC connection, see datasheet for power and ground connections
 
-// gain and bias parameters for magnetometer
-float x_bias = 0; 
-float x_gain = 1; 
-float y_bias = 0; 
-float y_gain = 1; 
+// float x_max = 19.12; 
+// float x_min = -11.7; 
+// float y_max = -32.18;
+// float y_min = -58.2; 
+
+float x_max = 1.0; 
+float x_min = -1.0; 
+float y_max = 1.0;
+float y_min = -1.0; 
+
+float x_range = (x_max - x_min)/2; 
+float x_bias = x_max-x_range; 
+float y_range = (y_max - y_min)/2; 
+float y_bias = y_max-y_range; 
 
 float magx, magy, heading; 
