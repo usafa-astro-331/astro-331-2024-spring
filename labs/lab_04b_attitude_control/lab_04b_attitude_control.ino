@@ -62,7 +62,7 @@ int elapsed = 0;
 #include "src/PID/attitude_PID.h"
 double kp=50.0, ki=5.0, kd=0.0; 
 double HeadingSetpoint, HeadingInput, dHeadingInput, Output; 
-PID myPID(&HeadingInput, &dHeadingInput, &Output, &HeadingSetpoint, kp, ki, kd, P_ON_M, REVERSE); //P_ON_M specifies that Proportional on Measurement be used
+PID myPID(&HeadingInput, &dHeadingInput, &Output, &HeadingSetpoint, kp, ki, kd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
 //                                                             //P_ON_E (Proportional on Error) is the default behavior
 
 
