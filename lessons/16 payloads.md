@@ -153,7 +153,7 @@ AIS signals can be received in space
 
 Orbcomm receives AIS messages with its constellation of OG2 communication satellites. 
 
-![https://spacenews.com/three-orbcomm-og2-satellites-malfunctioning-fate-to-be-determined/](sources/image-20230902122603276.png)
+![https://spacenews.com/three-orbcomm-og2-satellites-malfunctioning-fate-to-be-determined/](sources/orbcomm.png)
 
 Orbcomm OG2 
 
@@ -178,5 +178,4 @@ What can you do if someone turns off their AIS transmitter?
 ![https://opg.optica.org/optica/fulltext.cfm?uri=optica-5-1-60&id=380818](sources/image-20230903215713001.png)
 
 useful for interferometry
-
 
