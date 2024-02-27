@@ -2,7 +2,7 @@
 #define attitude_PID_v1_h
 #define LIBRARY_VERSION	1.1.1
 
-class PID
+class attitudePID
 {
 
 
@@ -17,7 +17,7 @@ class PID
   #define P_ON_E 1
 
   //commonly used functions **************************************************************************
-    PID(double*, double*, double*, double*,        // * constructor.  links the PID to the HeadingInput, dHeadingInput, Output, and 
+    attitudePID(double*, double*, double*, double*,        // * constructor.  links the PID to the HeadingInput, dHeadingInput, Output, and 
         double, double, double, int, int);//   HeadingSetpoint.  Initial tuning parameters are also set here.
 	
     void SetMode(int Mode);               // * sets PID to either Manual (0) or Auto (non-0)

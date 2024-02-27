@@ -60,10 +60,16 @@ int elapsed = 0;
 
 // PID 
 #include "src/PID/attitude_PID.h"
-double kp=50.0, ki=5.0, kd=0.0; 
+double kattp=50.0, katti=5.0, kattd=0.0; 
 double HeadingSetpoint, HeadingInput, dHeadingInput, Output; 
-PID myPID(&HeadingInput, &dHeadingInput, &Output, &HeadingSetpoint, kp, ki, kd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
+attitudePID myattitudePID(&HeadingInput, &dHeadingInput, &Output, &HeadingSetpoint, kattp, katti, kattd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
 //                                                             //P_ON_E (Proportional on Error) is the default behavior
+
+
+#include <PID_v1.h>
+double kp=50.0, ki=5.0, kd=0.0; 
+double SpeedSetpoint, SpeedInput, PWMOutput; 
+PID speedPID(&SpeedInput, &PWMOutput, &SpeedSetpoint, kp, ki, kd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
 
 
 void setup() {
@@ -150,8 +156,11 @@ HeadingInput = atan2(magy, -magx) +PI;
 dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
 HeadingSetpoint = HALF_PI; 
 Output = 0.5; 
-myPID.SetOutputLimits(-0.01, 0.01);
-myPID.SetMode(AUTOMATIC); 
+myattitudePID.SetOutputLimits(100, 1000);
+myattitudePID.SetMode(AUTOMATIC); 
+
+myspeedPID.SetOutputLimits(-0.01, 0.01);
+myspeedPID.SetMode(AUTOMATIC); 
 
 }  // end function setup
 
@@ -176,17 +185,19 @@ void loop() {
     HeadingInput = atan2(magy, -magx) +PI; 
     dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
 
-    kp = analogRead(A15)/100.0; 
-    ki = analogRead(A16)/500.0; 
-    kd = analogRead(A17)/10.0; 
-    myPID.SetTunings(kp, ki, kd);
+    kattp = analogRead(A15)/100.0; 
+    katti = analogRead(A16)/500.0; 
+    kattd = analogRead(A17)/10.0; 
+    myattitudePID.SetTunings(kattp, katti, kattd);
 
     HeadingSetpoint = analogRead(A14)/1024.* TWO_PI; 
 
 
 
     #ifdef USEPID
-      myPID.Compute(); 
+      myattitudePID.Compute(); 
+
+      speedPID.Compute();
       speed_pwm += Output; 
       if (speed_pwm > 1){
         speed_pwm = 1;
