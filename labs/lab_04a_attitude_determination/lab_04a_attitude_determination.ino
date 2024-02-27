@@ -9,41 +9,8 @@
 
 ICM_20948_I2C myICM;
 
-
-// ----- TB9051FTG Motor Carrier
-#include <TB9051FTGMotorCarrier.h>
-
-// include quadrature encoder for motor position
-// Teensy is not compatible with QuadratureEncoder/Hardware Interrupt 
-//   but comes with its own Encoder library
-#ifdef ARDUINO_TEENSY41
-  #include <Encoder.h>
-#else  // Arduino MKR Zero
-  #include <QuadratureEncoder.h>
-  // NOTE: QuadratureEncoder requires <EnableInterrupt.h>
-#endif
-
-
 #include "IMU_pins.h"
-#include "motor_controller_pins.h"
-
-// // TB9051FTGMotorCarrier pin definitions
-// static constexpr uint8_t pwm1Pin{2};
-// static constexpr uint8_t pwm2Pin{3};
-
-// Instantiate TB9051FTGMotorCarrier
-static TB9051FTGMotorCarrier driver{ pwm1Pin, pwm2Pin };
-
-// set up variable for pulse width modulation of motor
-static float throttlePWM{ 0.0f };
-
-unsigned long lastMilli = 0;
-long currentEncoderCount = 0;
-long lastEncoderCount = 0;
-float speed_rpm = 0.0;
-long timeElapsed = 0;
-
-float speed_pwm;
+#include "./sun_sensor_pins.h"
 
 // ----- SD card -----
 #include <SD.h>
@@ -53,13 +20,6 @@ const int chipSelect = BUILTIN_SDCARD;
 #else  // Arduino MKR Zero
 const int chipSelect = SDCARD_SS_PIN;
 #endif
-
-
-// ----- time variables -----
-int print_time = 0;
-int print_delay = 500;
-int current_time = 0;
-int elapsed = 0;
 
 File dataFile;
 
@@ -89,13 +49,6 @@ void setup() {
     }
   }
 
-  // ----- TB9051FTG Motor Carrier
-  driver.enable();
-
-
-  // put your setup code here, to run once:
-  pinMode(A0, OUTPUT);
-
   Serial.print("Initializing SD card...");
   // see if the card is present and can be initialized:
   if (!SD.begin(chipSelect)) {
@@ -106,29 +59,29 @@ void setup() {
   }
   Serial.println("card initialized.");
 
-  dataFile = SD.open("datalog.txt", FILE_WRITE);
+  dataFile = SD.open("04a_attitude_determination.dat", FILE_WRITE);
   // if the file is available, write to it:
   if (dataFile) {
-    dataFile.println("start of data");
-    dataFile.println("current (mA), voltage (V)");
+    String write_line = ""; 
+    write_line += "units:\n" ;
+    write_line += "time (ms)\n"; 
+    write_line += "gyr (dps)\n"; 
+    write_line += "mag (uT)\n"; 
+    write_line += "sun detector (count)\n"; 
+    write_line += "sun angle (deg)\n";
+
+    dataFile.print(write_line);
+
+    Serial.print(write_line);
+
     dataFile.close();
   }
   // if the file isn't open, pop up an error:
-  else { Serial.println("error opening datalog.txt"); }
-
-  Serial.println("time (ms),gyr z (dps), mag x (uT), mag y (uT), wheel (RPM)");
-
-  dataFile = SD.open("attitude.csv", FILE_WRITE);
-  // if the file is available, write to it:
-  if (dataFile) {
-    dataFile.println("time (ms), gyrz (dps), magx (uT), magy (uT), wheel (RPM)");
-    dataFile.close();
+  else { Serial.println("error opening datalog.txt"); 
   }
-
 
 }  // end function setup
 
-int speed;
 
 int t;
 int t0 = millis();  // set start time right before loop
@@ -138,64 +91,6 @@ int last_wrote = 0;
 int write_interval = 100;  // ms
 
 
-float set_speed() {
-  t = millis() - t0;
-
-  if (t - t0 < 10e3) {  // hold still at half speed (10 sec)
-    throttlePWM = 0.5;
-  }
-
-  else if (t - t0 < 15e3) {  // hold still at half speed (5 sec)
-    throttlePWM = 0.5;
-    digitalWrite(A0, HIGH);
-  }
-
-  else if (t - t0 < 17.5e3) {  // ramp up (2.5 sec)
-    elapsed = t - 15e3;
-    throttlePWM = 0.5 + 0.1 * elapsed / 2.5e3;
-    digitalWrite(A0, LOW);
-  }
-
-  else if (t - t0 < 20e3) {  // ramp back down to half speed (2.5 sec)
-    elapsed = t - 17.5e3;
-    throttlePWM = 0.6 - 0.1 * elapsed / 2.5e3;
-  }
-
-  else if (t - t0 < 25e3) {  // hold new position (5 sec)
-    throttlePWM = 0.5;
-    digitalWrite(A0, HIGH);
-  }
-
-  else if (t - t0 < 27.5e3) {  // ramp down (2.5 sec)
-    elapsed = t - 25e3;
-    throttlePWM = 0.5 - .1 * elapsed / 2.5e3;
-    digitalWrite(A0, LOW);
-  } else if (t - t0 < 30e3) {  // ramp back up to half speed  (5 sec)
-    elapsed = t - 27.5e3;
-    throttlePWM = .4 + .1 * elapsed / 2.5e3;
-  }
-
-  else if (t - t0 < 35e3) {  // hold new position (5 sec)
-    throttlePWM = 0.5;
-    digitalWrite(A0, HIGH);
-  }
-
-  else if (t - t0 < 40e3) {  // turn off wheel
-    throttlePWM = 0;
-    digitalWrite(A0, LOW);
-    driver.setOutput(0);
-
-  }
-
-  else {
-    while (1) {};
-  }
-
-  driver.setOutput(throttlePWM);
-
-  return throttlePWM;
-}  // end set_speed()
-
 String printFormattedFloat(float val, uint8_t leading, uint8_t decimals) {
   String write_line = "";
   float aval = abs(val);
@@ -203,7 +98,7 @@ String printFormattedFloat(float val, uint8_t leading, uint8_t decimals) {
     write_line += "-";
     // SERIAL_PORT.print("-");
   } else {
-    write_line += " ";
+    write_line += "+";
     // SERIAL_PORT.print(" ");
   }
   for (uint8_t indi = 0; indi < leading; indi++) {
@@ -234,73 +129,52 @@ String printFormattedFloat(float val, uint8_t leading, uint8_t decimals) {
 }  //end printformattedfloat()
 
 String printScaledAGMT(ICM_20948_I2C *sensor) {
-  // SERIAL_PORT.print("Gyr (DPS) [ ");
-  String write_line = "";
+  String write_line = ", gyrz:";
   write_line += printFormattedFloat(sensor->gyrZ(), 5, 2);
-  // SERIAL_PORT.print(" ], Mag (uT) [ ");
-  write_line += ", ";
-  // SERIAL_PORT.print(", ");
+  write_line += ", magx:";
   write_line += printFormattedFloat(sensor->magX(), 5, 2);
-  // SERIAL_PORT.print(", ");
-  write_line += ", ";
+  write_line += ", magy:";
   write_line += printFormattedFloat(sensor->magY(), 5, 2);
-  // SERIAL_PORT.print(" ]");
-  write_line += ", ";
-  // SERIAL_PORT.print(", ");
+
   return write_line;
 }
-
-
 
 void loop() {
   t = millis();
 
-
-
-
-
-  speed_pwm = set_speed();
-
-
-
-
-
-
   if (t - last_wrote > write_interval) {
-    String write_line = "";
+    String write_line = "t:";
     write_line += t;
-    write_line += ", ";
-    // Serial.print(write_line);
-    // Serial.print(", ");
 
     myICM.getAGMT();                        // The values are only updated when you call 'getAGMT'
     write_line += printScaledAGMT(&myICM);  // This function takes into account the scale settings from when the measurement was made to calculate the values with units
 
-    // Read current encoder count
-    // different libraries for Teensy/MKR Zero have different syntax
-    #ifdef ARDUINO_TEENSY41
-      currentEncoderCount = myEnc.read(); 
-    #else  // Arduino MKR Zero
-      currentEncoderCount = Encoder.getEncoderCount();
-    #endif  
+    // read sun sensors
+    sunpx_reading = analogRead(sunpx_pin);
+    sunpy_reading = analogRead(sunpy_pin);
+    sunnx_reading = analogRead(sunnx_pin);
+    sunny_reading = analogRead(sunny_pin);    
     
-    // Determine how much time has elapsed since last measurement
-    timeElapsed = millis() - lastMilli;
-    // Calculate speed in rpm
-    // encoder is 64 counts per rev
-    // motor is 10:1 geared
-    // counts/ms * 1 rev/64 counts * 1000 ms/1 sec * 60 s/1 min * 1 rot/10 gears = rev/min
-    write_line += float(currentEncoderCount - lastEncoderCount) / timeElapsed / 64 * 1000 * 60 / 10;
-    // reset variables to most recent value
-    lastMilli = millis();
-    lastEncoderCount = currentEncoderCount;
-    // Print to serial monitor
-    // Serial.print("Time (ms) = ");
-    //     Serial.print(lastMilli);
-    //     Serial.print(", Speed (RPM) = ");
+    // output raw sun sensor data
+    write_line += ", sunpx:"; 
+    write_line += sunpx_reading; 
+    write_line += ", sunpy:"; 
+    write_line += sunpy_reading; 
+    write_line += ", sunnx:"; 
+    write_line += sunnx_reading; 
+    write_line += ", sunny:"; 
+    write_line += sunny_reading; 
+
+    // // find sun direction
+    // north =  ; // you fill in here--remember to end line with ;
+    // east =  ; // you fill in here--remember to end line with ;
+    // sun_direction = atan2(-east*1.0, -north) * RAD_TO_DEG + 180; 
+    // write_line += ", sun:"; 
+    // write_line += sun_direction; 
+    
     Serial.println(write_line);
 
-    File dataFile = SD.open("attitude.csv", FILE_WRITE);
+    File dataFile = SD.open("04a_attitude_determination.dat", FILE_WRITE);
     // if the file is available, write to it:
     if (dataFile) {
       dataFile.println(write_line);
@@ -311,8 +185,6 @@ void loop() {
     else {
       Serial.println("error opening attitude.csv");
     }
-
-
 
     last_wrote += write_interval;
   }

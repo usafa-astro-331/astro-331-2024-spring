@@ -1,11 +1,15 @@
-# Lab 4: attitude
+# Lab 4a: attitude determination
 
-In this lab you will build and test part of FlatSAT's attitude system including an attitude sensor and reaction wheel. (FlatSAT's design calls for 3 reaction wheels but you will only test 1.) You will measure system performance to ensure that FlatSAT can meet it's orbital torque and momentum requirements. 
+In this lab you will build and test FlatSAT's attitude determination system including sun sensors, a magnetometer, and a rate gyroscope. 
+
+Prelab report instructions: 
+[https://www.overleaf.com/read/prdzpknpdtgf](https://www.overleaf.com/read/prdzpknpdtgf)
 
 
 
-Prelab instructions: 
-https://www.overleaf.com/read/prdzpknpdtgf
+If I update the code in time, you will save attitude data to FlatSAT’s SD card storage and stream it over your XBee radio link. 
+
+
 
 
 
@@ -14,8 +18,6 @@ https://www.overleaf.com/read/prdzpknpdtgf
 - 1 laptop
 - micro USB cable 
 - string
-- tachometer
-- benchtop power supply
 
 
 
@@ -23,7 +25,7 @@ https://www.overleaf.com/read/prdzpknpdtgf
 
 - FlatSAT
   - components from previous labs
-  - TB9051FTG motor controller (green PCB)
+    - SD card must be inserted
   - SparkFun 9 DOF IMU
   - reaction wheel assembly
   - 3 cell Li-ion battery
@@ -34,8 +36,6 @@ https://www.overleaf.com/read/prdzpknpdtgf
 
 ## documentation
 
-- motor datasheet (Pololu 37D metal gearmotor)
-- motor driver datasheet (Pololu TB905FTG motor driver carrier)
 - IMU datasheet (SparkFun 9DoF IMU)
 
 
@@ -45,24 +45,25 @@ https://www.overleaf.com/read/prdzpknpdtgf
 - Arduino IDE
 
 - Arduino SAMD drivers (already installed)
-- Arduino libraries (install via GUI or by running `install_libraries.bat`)
+- ensure these Arduino libraries are installed
 
   - SparkFun 9DoF IMU
-  - TB9051FTGMotorCarrier
-  - QuadratureEncoder
-  - EnableInterrupt
 
-- `lab_04_attitude.ino`
+- `lab_04a_attitude_determination.ino`
 
 
 
 ## setup
 
-For today’s lab, FlatSAT will be powered by a 12 V lithium ion battery. The motor driver and motor are powered directly from the battery’s 12 V supply. The Arduino itself is powered via a 12 V $\rightarrow$ 5 V BEC (battery eliminator circuit). Everything else is powered by Arduino’s Vcc pin (3.3 V). 
+For today’s lab, FlatSAT will be powered by a 12 V lithium ion battery. The (future) motor driver and motor are powered directly from the battery’s 12 V supply. The Arduino itself is powered via a 12 V $\rightarrow$ 5 V BEC (battery eliminator circuit). Everything else is powered by Arduino’s Vcc pin (3.3 V). 
 
 
 
 Copy the setup below, but **do not place the 3rd (middle) cell into the battery holder yet**. 
+
+And
+
+**DO not connect the battery’s 12 V output at any time during this lab. Do not even place a wire in the wago connector. **
 
 
 
@@ -70,83 +71,100 @@ Copy the setup below, but **do not place the 3rd (middle) cell into the battery 
 
 ![attitude_bb](../../fritzing_diagrams/04_attitude_bb.svg)
 
-- place IMU (red square) 
-  - connect to Arduino with QWIIC cable
-  - follow pin/color definitions in `IMU_pins.h`
-- motor driver (green square) 
-  - connect to Arduino and motor
-  - follow pin/color definitions in `motor_controller_pins.h`
-- place an LED on pin A0 and connect it to ground via a resistor—the short leg must connect to ground. 
-
-  - same wiring as in communication lab
-
-### motor driver
-
-![motor_driver](sources/motor_driver.jpg)
-
-FlatSAT controls a brushed DC motor via a Toshiba TB9051FTG brushed motor driver. FlatSAT sends a low-volt/low-current pulse-width modulated (PWM) signal to the motor driver board. The driver board provides line voltage to the motor at the same duty cycle. A high signal is full voltage and a low signal is zero voltage, and we use the duty cycle to essentially act as a fraction between those two. So, a 50% duty cycle corresponds to applying 50% of the total voltage that would correspond to the motor’s top speed. Thus, the higher the PWM command, the faster the motor will spin.
-
-![img](sources/clip_image002.jpg)
+- Add the red 9 DOF IMU (red square) to your FlatSAT as in the diagram.
+  - use a QWIIC cable to connect via the current sensor
+- Add 4 photocell voltage dividers. The photocell is R1. 
+  - ![](../../minilabs/06_metrology/sources/Resistive_divider2.svg)
+  - Vin: 3 V
+  - Ground: ground
+  - Vout: see `sun_sensor_pins.h`
+    - use pinouts defined for Arduino MKR Zero
+    - align +x (px), +y (py), -x (nx), -y (ny) with the IMU’s magnetometer coordinate frame
+    
 
 
 
-### motor
+## sensor checkout
 
-FlatSAT's reaction wheel motor is a metal gearmotor (Pololu item 4758). 
-
-- gear ratio: 10:1
-- voltage: 12 V
-
-The motor has a 6-wire connector with 2 wires each for motor power, speed encoder power, and encoder output. Connect it to FlatSAT. 
-
-<img src="sources/motor_connector.png" alt="motor_connector" style="zoom: 50%;" />
+Ensure you are collecting meaningful data from FlatSAT’s sensors. 
 
 
 
-## rotor mass properties
+Install SD card. Connect FlatSAT via USB and upload `lab_04a_attitude_determination.ino`. Open the serial plotter. 
 
-Measure the diameter and mass of the reaction wheel. There is a spare rotor and a scale on the filing cabinets near the door. Use these values to calculate momentum storage and compare your predictions to measurements. 
+Rotate FlatSat as you shine a light at it. 
+
+- x- and y-magnetometer data should wander up and down with orientation
+- gyroscope data should spike as you rotate
+- sun sensors should each rise when pointed toward light and fall when covered
+
+
+
+## integrate sun sensor
+
+Now you will modify the code to obtain a rough sun direction from the photocells. 
+
+Create an equation/algorithm to find the magnitude of sun’s brightness in the north/anti-north direction and the east/anti-east direction. 
+
+Uncomment the bottom lines of this code segment and add your algorithm.
+
+Comment out the “output raw sun sensor data” section. (Highlight all, `ctrl`-`/`.)
+
+Upload your modified code and test with a flashlight. 
+
+``` c++
+    // read sun sensors
+    sunpx_reading = analogRead(sunpx_pin);
+    sunpy_reading = analogRead(sunpy_pin);
+    sunnx_reading = analogRead(sunnx_pin);
+    sunny_reading = analogRead(sunny_pin);    
+    
+    // output raw sun sensor data
+    write_line += ", sunpx:"; 
+    write_line += sunpx_reading; 
+    write_line += ", sunpy:"; 
+    write_line += sunpy_reading; 
+    write_line += ", sunnx:"; 
+    write_line += sunnx_reading; 
+    write_line += ", sunny:"; 
+    write_line += sunny_reading; 
+
+    // // find sun direction
+    // north =  ; // you fill in here--remember to end line with ;
+    // east =  ; // you fill in here--remember to end line with ;
+    // sun_direction = atan2(east*1.0, -north) * RAD_TO_DEG + 180; 
+    // write_line += ", sun:"; 
+    // write_line += sun_direction; 
+```
+
 
 
 
 ## attitude determination
 
-Now you will test FlatSAT's attitude sensor as the reaction wheel changes spacecraft attitude.   
+Using a string loop, hang the motor platform from the hook above your workstation. Place FlatSAT and the battery holder on the platform and secure both with tape. Insert all battery cells and connect the BEC’s 5V output to FlatSAT’s Vin pin. 
 
-Install an SD card into FlatSAT. Open and upload `lab_04_attitude.ino`. Open the serial plotter and place FlatSAT in different orientations. Wave a magnet around the sensor. Disconnect the USB cable from FlatSAT. 
+**Remember: Do not connect the battery’s 12 V output to FlatSAT at any time during this lab. **
 
-`lab_04_attitude.ino` will command the wheel to different speeds and record magnetometer and gyroscope data. 
+Spin FlatSAT gently back and forth several times. 
+
+Let FlatSAT rotate slowly through at least 3 complete revolutions. 
+
+Spin FlatSAT quickly (at least 1 RPM) through at least 3 complete revolutions. 
 
 
-
-Tape FlatSAT to one end of the reaction wheel assembly Tape the battery to the other end.  Using string, hang the assembly from the hook at your workstation. Make it level. 
-
-When you are ready, connect the BEC's 5 V output to Arduino's Vin. This is what will happen. 
-
-- The rotor will spin up and maintain a steady-state speed of approximately 500 RPM for approximately 10 seconds. Hold FlatSAT steady during this time. 
-- The LED will illuminate when FlatSAT is holding still. If it’s drifting you can help it gently. 
-- The LED will deluminate when FlatSAT is accelerating. Don’t touch it. 
-- FlatSAT's wheel speed will ramp up and back down over the course of 5 seconds, ending up at 500 RPM. FlatSAT should hold steady at this orientation for 5 seconds. 
-- FlatSAT's wheel speed will ramp down and back up over the course of 5 seconds, again ending up at 500 RPM. FlatSAT should hold steady at this orientation for 5 seconds. 
-- FlatSAT will command the wheel to zero speed. Allow FlatSAT to spin freely. 
-- After 5 seconds of spinning, stop FlatSAT and remove power. 
-
-FlatSAT will record information from its rate gyros and magnetometer to `attitude.csv` on the SD card. Remove the SD card and save the data for your team's later use. 
 
 ## Lab station cleanup
 
 - Transfer saved data to your group's storage location
 - Disconnect devices from FlatSAT and all computers
-- Remove the ESD wrist straps and replace them in the bag at your lab station.
 - Replace all items at your lab station the way you found them. 
-- Close Arduino IDE, and log out of the laptop.
 - Have your instructor check off your lab station before you depart.
+
+
 
 ## Post-lab data analysis
 
-Use your measured mass properties and the provided max speed/acceleration data to determine reaction wheel torque. 
+For the next lab the magnetometer data will be an input to the spacecraft’s attitude system. To use it, you must calibrate the magnetometer data. 
 
-Use your recorded attitude data to determine the MOI of the entire FlatSAT assembly. Do this with the wheel speed data and IMU data immediately before and after the wheel turned off. 
-
-Include graphs of IMU data (magnetometer AND rate gyro) in your final report. 
-
+Use the magnetometer data you gathered to find the gain and bias of your x- and y-magnetometers. 
