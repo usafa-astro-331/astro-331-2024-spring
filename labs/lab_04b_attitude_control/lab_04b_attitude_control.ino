@@ -150,7 +150,7 @@ HeadingInput = atan2(magy, -magx) +PI;
 dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
 HeadingSetpoint = HALF_PI; 
 Output = 0.5; 
-myPID.SetOutputLimits(0.1, 1.0);
+myPID.SetOutputLimits(-0.01, 0.01);
 myPID.SetMode(AUTOMATIC); 
 
 }  // end function setup
@@ -187,8 +187,14 @@ void loop() {
 
     #ifdef USEPID
       myPID.Compute(); 
-      speed_pwm = Output; 
-      driver.setOutput(Output);
+      speed_pwm += Output; 
+      if (speed_pwm > 1){
+        speed_pwm = 1;
+      }
+      else if (speed_pwm < 0.1){
+        speed_pwm = 0.1; 
+      }
+      driver.setOutput(speed_pwm);
       // if (t > 20e3) HeadingSetpoint = 0; 
     #else // closed loop speed control
       speed_pwm = set_speed(); 
