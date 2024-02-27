@@ -17,6 +17,7 @@
 // float y_max = -32.18;
 // float y_min = -58.2; 
 
+// magnetometer range values used for calibration
 float x_max = 1.0; 
 float x_min = -1.0; 
 float y_max = 1.0;

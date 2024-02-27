@@ -3,7 +3,13 @@
 In this lab you will build and test FlatSAT's attitude determination system including sun sensors, a magnetometer, and a rate gyroscope. 
 
 Prelab report instructions: 
-https://www.overleaf.com/read/prdzpknpdtgf
+[https://www.overleaf.com/read/prdzpknpdtgf](https://www.overleaf.com/read/prdzpknpdtgf)
+
+
+
+If I update the code in time, you will save attitude data to FlatSAT’s SD card storage and stream it over your XBee radio link. 
+
+
 
 
 
@@ -54,6 +60,10 @@ For today’s lab, FlatSAT will be powered by a 12 V lithium ion battery. The (f
 
 
 Copy the setup below, but **do not place the 3rd (middle) cell into the battery holder yet**. 
+
+And
+
+**DO not connect the battery’s 12 V output at any time during this lab. Do not even place a wire in the wago connector. **
 
 
 
@@ -132,11 +142,15 @@ Upload your modified code and test with a flashlight.
 
 ## attitude determination
 
-Using a string loop, hang the motor platform from the hook above your workstation. Place FlatSAT and the battery holder on the platform and secure with tape. Insert all battery cells and connect the BEC’s 5V output to FlatSAT’s Vin pin. 
+Using a string loop, hang the motor platform from the hook above your workstation. Place FlatSAT and the battery holder on the platform and secure both with tape. Insert all battery cells and connect the BEC’s 5V output to FlatSAT’s Vin pin. 
 
-Gently spin FlatSAT several times. Ensure you get at least 3 complete revolutions uninterrupted. Also spin it it back and forth several times. 
+**Remember: Do not connect the battery’s 12 V output to FlatSAT at any time during this lab. **
 
-Spin FlatSAT quickly (at least 1 RPM). 
+Spin FlatSAT gently back and forth several times. 
+
+Let FlatSAT rotate slowly through at least 3 complete revolutions. 
+
+Spin FlatSAT quickly (at least 1 RPM) through at least 3 complete revolutions. 
 
 
 
@@ -153,4 +167,4 @@ Spin FlatSAT quickly (at least 1 RPM).
 
 For the next lab the magnetometer data will be an input to the spacecraft’s attitude system. To use it, you must calibrate the magnetometer data. 
 
-Use the magnetometer data you gathered to find the gain and bias of your magnetometers. 
+Use the magnetometer data you gathered to find the gain and bias of your x- and y-magnetometers. 

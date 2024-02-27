@@ -2,7 +2,7 @@
 
 In this lab you will improve FlatSAT’s attitude determination system and integrate a reaction wheel for attitude control. (FlatSAT's design calls for 3 reaction wheels but you will only test 1.) You will measure system performance to ensure that FlatSAT can meet orbital torque and momentum requirements. 
 
-The prelab report was due last time. 
+You already submitted the prelab report for this lab. 
 
 
 
@@ -105,16 +105,16 @@ place an LED on pin A0 and connect it to ground via a resistor—the short leg m
 
 ## magnetometer calibration
 
-Use the gain and bias values you found using data from lab 04a to calibrate your magnetometer. 
+Ideally you could use the gain and bias values you found using data from lab 04a to calibrate your magnetometer. Unfortunately, your magnetometer has likely drifted so far that the previous calibration is unusable. 
 
-Replace the magnetometer gain and bias values in `IMU_setup.h`.
+Upload `lab_04b_attitude_control.ino`. Slowly rotate FlatSAT and record the min and max magnetometer values you see in the serial plotter or serial window. Replace these magnetometer values in `IMU_setup.h`. Make sure each number has at least one decimal. 
 
 ```c++
-// gain and bias parameters for magnetometer
-float x_bias = 0; 
-float x_gain = 1; 
-float y_bias = 0; 
-float y_gain = 1; 
+// magnetometer range values used for calibration
+float x_max = 1.0; 
+float x_min = -1.0; 
+float y_max = 1.0;
+float y_min = -1.0; 
 ```
 
 Upload `lab_04b_attitude_control.ino` and rotate FlatSAT. Open the serial plotter and watch the heading and gyroscope data change. You should see all heading values from $0–2\pi$. 
