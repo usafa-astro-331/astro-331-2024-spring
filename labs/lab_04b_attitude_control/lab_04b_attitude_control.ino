@@ -68,8 +68,9 @@ attitudePID myattitudePID(&HeadingInput, &dHeadingInput, &Output, &HeadingSetpoi
 
 #include <PID_v1.h>
 double kp=50.0, ki=5.0, kd=0.0; 
-double SpeedSetpoint, SpeedInput, PWMOutput; 
-PID speedPID(&SpeedInput, &PWMOutput, &SpeedSetpoint, kp, ki, kd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
+double  SpeedInput, PWMOutput; 
+double SpeedSetpoint = 0.0; 
+PID myspeedPID(&SpeedInput, &PWMOutput, &SpeedSetpoint, kp, ki, kd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
 
 
 void setup() {
@@ -159,7 +160,7 @@ Output = 0.5;
 myattitudePID.SetOutputLimits(100, 1000);
 myattitudePID.SetMode(AUTOMATIC); 
 
-myspeedPID.SetOutputLimits(-0.01, 0.01);
+myspeedPID.SetOutputLimits(-0.001, 0.001);
 myspeedPID.SetMode(AUTOMATIC); 
 
 }  // end function setup
@@ -184,10 +185,11 @@ void loop() {
     magy =  (myICM.magY() - y_bias) /y_range; 
     HeadingInput = atan2(magy, -magx) +PI; 
     dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
+    SpeedInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
 
-    kattp = analogRead(A15)/100.0; 
-    katti = analogRead(A16)/500.0; 
-    kattd = analogRead(A17)/10.0; 
+    kp = analogRead(A15)/100.0; 
+    ki = analogRead(A16)/500.0; 
+    kd = analogRead(A17)/10.0; 
     myattitudePID.SetTunings(kattp, katti, kattd);
 
     HeadingSetpoint = analogRead(A14)/1024.* TWO_PI; 
@@ -197,8 +199,8 @@ void loop() {
     #ifdef USEPID
       myattitudePID.Compute(); 
 
-      speedPID.Compute();
-      speed_pwm += Output; 
+      myspeedPID.Compute();
+      speed_pwm += PWMOutput; 
       if (speed_pwm > 1){
         speed_pwm = 1;
       }
