@@ -49,7 +49,7 @@ void setup() {
                 dataFile.close();
               }
               // if the file isn't open, pop up an error:
-              else { Serial.println("error opening datalog.txt");  }
+              else { Serial.println("error opening log file");  }
 
 } // end function setup()
 
