@@ -13,6 +13,7 @@ ICM_20948_I2C myICM;
 #include "./sun_sensor_pins.h"
 
 // ----- SD card -----
+#include <SPI.h>
 #include <SD.h>
 
 #ifdef ARDUINO_TEENSY41
@@ -20,8 +21,6 @@ const int chipSelect = BUILTIN_SDCARD;
 #else  // Arduino MKR Zero
 const int chipSelect = SDCARD_SS_PIN;
 #endif
-
-File dataFile;
 
 void setup() {
   SERIAL_PORT.begin(115200);
@@ -58,8 +57,9 @@ void setup() {
       ;
   }
   Serial.println("card initialized.");
+  delay(2000);
 
-  dataFile = SD.open("04a_attitude_determination.dat", FILE_WRITE);
+  File dataFile = SD.open("04a_att.dat", FILE_WRITE);
   // if the file is available, write to it:
   if (dataFile) {
     String write_line = ""; 
@@ -77,7 +77,7 @@ void setup() {
     dataFile.close();
   }
   // if the file isn't open, pop up an error:
-  else { Serial.println("error opening datalog.txt"); 
+  else { Serial.println("error opening log file"); 
   }
 
 }  // end function setup
@@ -174,7 +174,7 @@ void loop() {
     
     Serial.println(write_line);
 
-    File dataFile = SD.open("04a_attitude_determination.dat", FILE_WRITE);
+    File dataFile = SD.open("04a_att.dat", FILE_WRITE);
     // if the file is available, write to it:
     if (dataFile) {
       dataFile.println(write_line);
@@ -183,7 +183,7 @@ void loop() {
     }
     // if the file isn't open, pop up an error:
     else {
-      Serial.println("error opening attitude.csv");
+      Serial.println("error opening data file");
     }
 
     last_wrote += write_interval;

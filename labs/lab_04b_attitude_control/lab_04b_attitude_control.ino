@@ -43,6 +43,7 @@ long timeElapsed = 0;
 float speed_pwm;
 
 // ----- SD card -----
+  #include <SPI.h>
   #include <SD.h>
   #ifdef ARDUINO_TEENSY41
     const int chipSelect = BUILTIN_SDCARD;
@@ -116,7 +117,7 @@ delay(5000);
   }
   Serial1.println("card initialized.");
 
-  dataFile = SD.open("04b_attitude_control.dat", FILE_WRITE);
+  dataFile = SD.open("04b_att.dat", FILE_WRITE);
   // if the file is available, write to it:
   if (dataFile) {
     String write_line = "";
@@ -247,7 +248,7 @@ void loop() {
     // Print to serial monitor and file
     Serial1.println(write_line);
 
-    File dataFile = SD.open("04b_attitude_control.dat", FILE_WRITE);
+    File dataFile = SD.open("04b_att.dat", FILE_WRITE);
     // if the file is available, write to it:
     if (dataFile) {
       dataFile.println(write_line);
