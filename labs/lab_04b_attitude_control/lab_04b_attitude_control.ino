@@ -161,7 +161,7 @@ Output = 0.5;
 myattitudePID.SetOutputLimits(100, 1000);
 myattitudePID.SetMode(AUTOMATIC); 
 
-myspeedPID.SetOutputLimits(-0.001, 0.001);
+myspeedPID.SetOutputLimits(-0.01, 0.01);
 myspeedPID.SetMode(AUTOMATIC); 
 
 }  // end function setup
@@ -177,6 +177,12 @@ int t0 = millis();  // set start time right before loop
 int last_wrote = 0;
 int write_interval = 300;  // ms
 
+#define NSAMPLES 30
+double gyr[NSAMPLES]; 
+int gyrindex = 0; 
+double gyrvalue = 0.0; 
+double gyrsum = 0.0; 
+
 void loop() {
   t = millis();
 
@@ -187,6 +193,15 @@ void loop() {
     HeadingInput = atan2(magy, -magx) +PI; 
     dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
     SpeedInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
+
+    gyrsum = gyrsum - gyr[gyrindex]; 
+    gyrvalue = -myICM.gyrZ(); 
+    gyr[gyrindex] = gyrvalue; 
+    gyrsum += gyrvalue; 
+
+    gyrindex = (gyrindex+1) % NSAMPLES; 
+
+    SpeedInput = gyrsum / NSAMPLES; 
 
     kp = analogRead(A15)/100.0; 
     ki = analogRead(A16)/500.0; 
@@ -247,7 +262,7 @@ void loop() {
     write_line += HeadingInput;
     write_line += "\t";
     // write_line += ", gyr:";
-    write_line += dHeadingInput;
+    write_line += SpeedInput;
     write_line += "\t";
     // write_line += ", ω_cmd:";
     write_line += speed_pwm * 1000; // speed in RPM
