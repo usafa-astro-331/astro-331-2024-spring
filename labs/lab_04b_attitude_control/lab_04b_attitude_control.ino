@@ -71,7 +71,7 @@ attitudePID myattitudePID(&HeadingInput, &dHeadingInput, &Output, &HeadingSetpoi
 double kp=50.0, ki=5.0, kd=0.0; 
 double  GyroSpeedInput, PWMAccelOutput; 
 double GyroSpeedSetpoint = 0.0; 
-PID myspeedPID(&GyroSpeedInput, &PWMAccelOutput, &GyroSpeedSetpoint, kp, ki, kd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
+PID myspeedPID(&GyroSpeedInput, &PWMAccelOutput, &GyroSpeedSetpoint, kp, ki, kd, P_ON_E, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
 
 
 void setup() {
@@ -176,35 +176,62 @@ int t0 = millis();  // set start time right before loop
 
 // write accel data (to SD and/or serial) every `write_interval` ms
 int last_wrote = 0;
-int write_interval = 300;  // ms
+int write_interval = 100;  // ms
 
-#define NSAMPLES 30
+#define NSAMPLES 50
 double gyr[NSAMPLES]; 
 int gyrindex = 0; 
 double gyrvalue = 0.0; 
 double gyrsum = 0.0; 
+int last_time; 
+double lastHeadingInput; 
 
 void loop() {
   t = millis();
 
+  
     myICM.getAGMT();  // The values are only updated when you call 'getAGMT'
 
     magx =  (myICM.magX() - x_bias) /x_range; 
     magy =  (myICM.magY() - y_bias) /y_range; 
+    
     HeadingInput = atan2(magy, -magx) +PI; 
+    dHeadingInput = (lastHeadingInput - HeadingInput);
+    if (dHeadingInput < -PI) {
+      dHeadingInput += TWO_PI;
+    }
+    else if (dHeadingInput > PI) {
+      dHeadingInput -= TWO_PI; 
+    }
+    dHeadingInput *= 1000.0/float(t-last_time);
+    lastHeadingInput = HeadingInput;
+
+    last_time = t; 
+
+
     // dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
     // GyroSpeedInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
-    dHeadingInput = -myICM.gyrZ() ; // neg b/c gyrz = -magz on ICM_20948
-    GyroSpeedInput = -myICM.gyrZ() ; // neg b/c gyrz = -magz on ICM_20948
+    // dHeadingInput = -myICM.gyrZ() ; // neg b/c gyrz = -magz on ICM_20948
+    // GyroSpeedInput = -myICM.gyrZ() ; // neg b/c gyrz = -magz on ICM_20948
 
     gyrsum = gyrsum - gyr[gyrindex]; 
-    gyrvalue = -myICM.gyrZ(); 
+    gyrvalue = dHeadingInput; 
     gyr[gyrindex] = gyrvalue; 
     gyrsum += gyrvalue; 
 
     gyrindex = (gyrindex+1) % NSAMPLES; 
 
-    GyroSpeedInput = gyrsum / NSAMPLES; 
+    // gyrsum = gyrsum - gyr[gyrindex]; 
+    // gyrvalue = -myICM.gyrZ(); 
+    // gyr[gyrindex] = gyrvalue; 
+    // gyrsum += gyrvalue; 
+
+    // gyrindex = (gyrindex+1) % NSAMPLES; 
+
+
+
+    // GyroSpeedInput = gyrsum / NSAMPLES; 
+    GyroSpeedInput = gyrsum/NSAMPLES;
 
     kp = analogRead(A15)/100.0; 
     ki = analogRead(A16)/500.0; 
@@ -287,6 +314,7 @@ void loop() {
     
     // Print to serial monitor and file
     Serial1.println(write_line);
+    Serial.println(write_line);
 
     File dataFile = SD.open("04b_att.dat", FILE_WRITE);
     // if the file is available, write to it:
