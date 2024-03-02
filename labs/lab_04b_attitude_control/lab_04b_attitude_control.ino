@@ -69,9 +69,9 @@ attitudePID myattitudePID(&HeadingInput, &dHeadingInput, &Output, &HeadingSetpoi
 
 #include <PID_v1.h>
 double kp=50.0, ki=5.0, kd=0.0; 
-double  SpeedInput, PWMOutput; 
-double SpeedSetpoint = 0.0; 
-PID myspeedPID(&SpeedInput, &PWMOutput, &SpeedSetpoint, kp, ki, kd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
+double  GyroSpeedInput, PWMAccelOutput; 
+double GyroSpeedSetpoint = 0.0; 
+PID myspeedPID(&GyroSpeedInput, &PWMAccelOutput, &GyroSpeedSetpoint, kp, ki, kd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
 
 
 void setup() {
@@ -162,6 +162,7 @@ myattitudePID.SetOutputLimits(100, 1000);
 myattitudePID.SetMode(AUTOMATIC); 
 
 myspeedPID.SetOutputLimits(-0.01, 0.01);
+myspeedPID.SetSampleTime(10);
 myspeedPID.SetMode(AUTOMATIC); 
 
 }  // end function setup
@@ -191,8 +192,10 @@ void loop() {
     magx =  (myICM.magX() - x_bias) /x_range; 
     magy =  (myICM.magY() - y_bias) /y_range; 
     HeadingInput = atan2(magy, -magx) +PI; 
-    dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
-    SpeedInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
+    // dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
+    // GyroSpeedInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
+    dHeadingInput = -myICM.gyrZ() ; // neg b/c gyrz = -magz on ICM_20948
+    GyroSpeedInput = -myICM.gyrZ() ; // neg b/c gyrz = -magz on ICM_20948
 
     gyrsum = gyrsum - gyr[gyrindex]; 
     gyrvalue = -myICM.gyrZ(); 
@@ -201,13 +204,16 @@ void loop() {
 
     gyrindex = (gyrindex+1) % NSAMPLES; 
 
-    SpeedInput = gyrsum / NSAMPLES; 
+    GyroSpeedInput = gyrsum / NSAMPLES; 
 
     kp = analogRead(A15)/100.0; 
     ki = analogRead(A16)/500.0; 
     kd = analogRead(A17)/10.0; 
-    myattitudePID.SetTunings(kattp, katti, kattd);
+    // myattitudePID.SetTunings(kattp, katti, kattd);
 
+    myspeedPID.SetTunings(kp, ki, kd);
+
+    
     HeadingSetpoint = analogRead(A14)/1024.* TWO_PI; 
 
 
@@ -216,7 +222,7 @@ void loop() {
       myattitudePID.Compute(); 
 
       myspeedPID.Compute();
-      speed_pwm += PWMOutput; 
+      speed_pwm += PWMAccelOutput; 
       if (speed_pwm > 1){
         speed_pwm = 1;
       }
@@ -262,7 +268,7 @@ void loop() {
     write_line += HeadingInput;
     write_line += "\t";
     // write_line += ", gyr:";
-    write_line += SpeedInput;
+    write_line += GyroSpeedInput;
     write_line += "\t";
     // write_line += ", ω_cmd:";
     write_line += speed_pwm * 1000; // speed in RPM
