@@ -73,7 +73,7 @@ int elapsed = 0;
 
 
 #include <PID_v1.h>
-double kp=50.0, ki=5.0, kd=0.0; 
+double kp=10.0, ki=0.0, kd=1e4.0; 
 double  GyroSpeedInput, PWMAccelOutput; 
 // double GyroSpeedSetpoint = 0.0;
 // double GyroSpeedSetpoint = &AttitudeSpeedOutput;  
@@ -97,7 +97,7 @@ void setup() {
   // spin reaction wheel to 500 RPM, wait 5 sec
 throttlePWM = 0.5;
 driver.setOutput(throttlePWM);
-delay(5000); 
+delay(1000); 
 
 
   Serial.begin(115200);
@@ -179,8 +179,8 @@ delay(5000);
 // myattitudePID.SetOutputLimits(0.1, 1);
 // myattitudePID.SetMode(AUTOMATIC); 
 
-myspeedPID.SetOutputLimits(-0.005, 0.005);
-myspeedPID.SetSampleTime(20);
+myspeedPID.SetOutputLimits(-0.02, 0.02);
+myspeedPID.SetSampleTime(10);
 myspeedPID.SetMode(AUTOMATIC); 
 
 }  // end function setup
@@ -203,6 +203,9 @@ double gyrvalue = 0.0;
 double gyrsum = 0.0; 
 int last_time; 
 double lastHeadingInput; 
+double w_meas;
+
+bool computed; 
 
 void loop() {
   t = millis();
@@ -261,9 +264,9 @@ void loop() {
     // GyroSpeedInput = gyrsum/NSAMPLES;
     // GyroSpeedInput = gyros.z() * DEG_TO_RAD/1.0; 
 
-    kp = analogRead(A15)/2000.0; 
-    ki = analogRead(A16)/10000.0; 
-    kd = analogRead(A17)*1.0; 
+    // kp = analogRead(A15)/50.0; 
+    // ki = analogRead(A16)/500.0; 
+    // kd = analogRead(A17)*10.0; 
     // myattitudePID.SetTunings(kattp, katti, kattd);
 
     myspeedPID.SetTunings(kp, ki, kd);
@@ -310,6 +313,11 @@ void loop() {
     // encoder is 64 counts per rev
     // motor is 10:1 geared
     // counts/ms * 1 rev/64 counts * 1000 ms/1 sec * 60 s/1 min * 1 rot/10 gears = rev/min
+    w_meas = float(currentEncoderCount - lastEncoderCount) / timeElapsed / 64 * 1000 * 60 / 10;
+    if (w_meas > 2000){
+      w_meas = NAN; 
+
+    }
 
     String write_line = "";
     // String write_line = "t:";
@@ -331,7 +339,7 @@ void loop() {
     write_line += speed_pwm * 1000; // speed in RPM
     write_line += "\t";
     // write_line += ", ω_meas:";
-    write_line += float(currentEncoderCount - lastEncoderCount) / timeElapsed / 64 * 1000 * 60 / 10;
+    write_line += w_meas;
     write_line += "\t";
     write_line += kp;
     write_line += "\t";
