@@ -2,6 +2,11 @@
 
 #define SERIAL_PORT Serial
 #define WIRE_PORT Wire  // Your desired Wire port.      Used when "USE_SPI" is not defined
+#include <Adafruit_BNO055.h>
+#include <utility/imumaths.h>
+#define BNO055_SAMPLERATE_DELAY_MS (20)
+Adafruit_BNO055 bno = Adafruit_BNO055(-1, 0x28, &Wire);
+
 
 // ----- ICM 20948 IMU
   #include <ICM_20948.h>  // Click here to get the library: http://librarymanager/All#SparkFun_ICM_20948_IMU
@@ -62,19 +67,31 @@ int elapsed = 0;
 // PID 
 #include "src/PID/attitude_PID.h"
 double kattp=50.0, katti=5.0, kattd=0.0; 
-double HeadingSetpoint, HeadingInput, dHeadingInput, Output; 
-attitudePID myattitudePID(&HeadingInput, &dHeadingInput, &Output, &HeadingSetpoint, kattp, katti, kattd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
+double HeadingSetpoint, HeadingInput, dHeadingInput, AttitudeSpeedOutput; 
+attitudePID myattitudePID(&HeadingInput, &dHeadingInput, &AttitudeSpeedOutput, &HeadingSetpoint, kattp, katti, kattd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
 //                                                             //P_ON_E (Proportional on Error) is the default behavior
 
 
 #include <PID_v1.h>
 double kp=50.0, ki=5.0, kd=0.0; 
 double  GyroSpeedInput, PWMAccelOutput; 
-double GyroSpeedSetpoint = 0.0; 
-PID myspeedPID(&GyroSpeedInput, &PWMAccelOutput, &GyroSpeedSetpoint, kp, ki, kd, P_ON_E, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
+// double GyroSpeedSetpoint = 0.0;
+// double GyroSpeedSetpoint = &AttitudeSpeedOutput;  
+PID myspeedPID(&GyroSpeedInput, &PWMAccelOutput, &AttitudeSpeedOutput, kp, ki, kd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
 
 
 void setup() {
+
+  if(!bno.begin())
+  {
+    /* There was a problem detecting the BNO055 ... check your connections */
+    Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+    while(1);
+  }
+
+  delay(1000);
+  bno.setExtCrystalUse(true);
+
 
   // spin reaction wheel to 500 RPM, wait 5 sec
 throttlePWM = 0.5;
@@ -157,8 +174,8 @@ magy =  (myICM.magY() - y_bias) /y_range;
 HeadingInput = atan2(magy, -magx) +PI; 
 dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
 HeadingSetpoint = HALF_PI; 
-Output = 0.5; 
-myattitudePID.SetOutputLimits(100, 1000);
+// Output = 0.5; 
+myattitudePID.SetOutputLimits(0.1, 1);
 myattitudePID.SetMode(AUTOMATIC); 
 
 myspeedPID.SetOutputLimits(-0.01, 0.01);
@@ -189,11 +206,18 @@ double lastHeadingInput;
 void loop() {
   t = millis();
 
+  imu::Vector<3> gyros = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
+  imu::Vector<3> mags = bno.getVector(Adafruit_BNO055::VECTOR_MAGNETOMETER);
+
+
   
     myICM.getAGMT();  // The values are only updated when you call 'getAGMT'
 
-    magx =  (myICM.magX() - x_bias) /x_range; 
-    magy =  (myICM.magY() - y_bias) /y_range; 
+    // magx =  (myICM.magX() - x_bias) /x_range; 
+    // magy =  (myICM.magY() - y_bias) /y_range; 
+
+    magx = mags.x(); 
+    magy = mags.y(); 
     
     HeadingInput = atan2(magy, -magx) +PI; 
     dHeadingInput = (lastHeadingInput - HeadingInput);
@@ -231,7 +255,8 @@ void loop() {
 
 
     // GyroSpeedInput = gyrsum / NSAMPLES; 
-    GyroSpeedInput = gyrsum/NSAMPLES;
+    // GyroSpeedInput = gyrsum/NSAMPLES;
+    GyroSpeedInput = gyros.z() * DEG_TO_RAD; 
 
     kp = analogRead(A15)/100.0; 
     ki = analogRead(A16)/500.0; 
