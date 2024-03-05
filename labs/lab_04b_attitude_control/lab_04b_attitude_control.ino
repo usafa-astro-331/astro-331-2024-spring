@@ -276,8 +276,10 @@ void loop() {
     #ifdef USEPID
       // myattitudePID.Compute(); 
 
-      myspeedPID.Compute();
-      speed_pwm += PWMAccelOutput; 
+      computed = myspeedPID.Compute();
+      if (computed){
+        speed_pwm += PWMAccelOutput; 
+      }
       if (speed_pwm > 1){
         speed_pwm = 1;
       }
