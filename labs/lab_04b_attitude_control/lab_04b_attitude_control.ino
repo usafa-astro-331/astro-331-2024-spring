@@ -64,12 +64,12 @@ float speed_pwm;
 int current_time = 0;
 int elapsed = 0;
 
-// PID 
-#include "src/PID/attitude_PID.h"
-double kattp=50.0, katti=5.0, kattd=0.0; 
-double HeadingSetpoint, HeadingInput, dHeadingInput, AttitudeSpeedOutput; 
-attitudePID myattitudePID(&HeadingInput, &dHeadingInput, &AttitudeSpeedOutput, &HeadingSetpoint, kattp, katti, kattd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
-//                                                             //P_ON_E (Proportional on Error) is the default behavior
+// // PID 
+// #include "src/PID/attitude_PID.h"
+// double kattp=50.0, katti=5.0, kattd=0.0; 
+// double HeadingSetpoint, HeadingInput, dHeadingInput, AttitudeSpeedOutput; 
+// attitudePID myattitudePID(&HeadingInput, &dHeadingInput, &AttitudeSpeedOutput, &HeadingSetpoint, kattp, katti, kattd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
+// //                                                             //P_ON_E (Proportional on Error) is the default behavior
 
 
 #include <PID_v1.h>
@@ -77,7 +77,8 @@ double kp=50.0, ki=5.0, kd=0.0;
 double  GyroSpeedInput, PWMAccelOutput; 
 // double GyroSpeedSetpoint = 0.0;
 // double GyroSpeedSetpoint = &AttitudeSpeedOutput;  
-PID myspeedPID(&GyroSpeedInput, &PWMAccelOutput, &AttitudeSpeedOutput, kp, ki, kd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
+double spacecraftSpeedSetpoint = 0.0; 
+PID myspeedPID(&GyroSpeedInput, &PWMAccelOutput, &spacecraftSpeedSetpoint, kp, ki, kd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
 
 
 void setup() {
@@ -168,26 +169,26 @@ delay(5000);
 
 
 // initialize PID
-myICM.getAGMT();
-magx =  (myICM.magX() - x_bias) /x_range; 
-magy =  (myICM.magY() - y_bias) /y_range; 
-HeadingInput = atan2(magy, -magx) +PI; 
-dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
-HeadingSetpoint = HALF_PI; 
+// myICM.getAGMT();
+// magx =  (myICM.magX() - x_bias) /x_range; 
+// magy =  (myICM.magY() - y_bias) /y_range; 
+// HeadingInput = atan2(magy, -magx) +PI; 
+// dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
+// HeadingSetpoint = HALF_PI; 
 // Output = 0.5; 
-myattitudePID.SetOutputLimits(0.1, 1);
-myattitudePID.SetMode(AUTOMATIC); 
+// myattitudePID.SetOutputLimits(0.1, 1);
+// myattitudePID.SetMode(AUTOMATIC); 
 
-myspeedPID.SetOutputLimits(-0.01, 0.01);
-myspeedPID.SetSampleTime(10);
+myspeedPID.SetOutputLimits(-0.005, 0.005);
+myspeedPID.SetSampleTime(20);
 myspeedPID.SetMode(AUTOMATIC); 
 
 }  // end function setup
 
 int speed;
 
-int PID_interval = 10;
-int last_PID_time;
+// int PID_interval = 10;
+// int last_PID_time;
 int t;
 int t0 = millis();  // set start time right before loop
 
@@ -195,7 +196,7 @@ int t0 = millis();  // set start time right before loop
 int last_wrote = 0;
 int write_interval = 100;  // ms
 
-#define NSAMPLES 50
+#define NSAMPLES 10
 double gyr[NSAMPLES]; 
 int gyrindex = 0; 
 double gyrvalue = 0.0; 
@@ -219,18 +220,18 @@ void loop() {
     magx = mags.x(); 
     magy = mags.y(); 
     
-    HeadingInput = atan2(magy, -magx) +PI; 
-    dHeadingInput = (lastHeadingInput - HeadingInput);
-    if (dHeadingInput < -PI) {
-      dHeadingInput += TWO_PI;
-    }
-    else if (dHeadingInput > PI) {
-      dHeadingInput -= TWO_PI; 
-    }
-    dHeadingInput *= 1000.0/float(t-last_time);
-    lastHeadingInput = HeadingInput;
+    // HeadingInput = atan2(magy, -magx) +PI; 
+    // dHeadingInput = (lastHeadingInput - HeadingInput);
+    // if (dHeadingInput < -PI) {
+    //   dHeadingInput += TWO_PI;
+    // }
+    // else if (dHeadingInput > PI) {
+    //   dHeadingInput -= TWO_PI; 
+    // }
+    // dHeadingInput *= 1000.0/float(t-last_time);
+    // lastHeadingInput = HeadingInput;
 
-    last_time = t; 
+    // last_time = t; 
 
 
     // dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
@@ -239,7 +240,9 @@ void loop() {
     // GyroSpeedInput = -myICM.gyrZ() ; // neg b/c gyrz = -magz on ICM_20948
 
     gyrsum = gyrsum - gyr[gyrindex]; 
-    gyrvalue = dHeadingInput; 
+    // GyroSpeedInput = gyros.z() * DEG_TO_RAD/1.0; 
+    // gyrvalue = dHeadingInput;  
+    gyrvalue = gyros.z() * DEG_TO_RAD; 
     gyr[gyrindex] = gyrvalue; 
     gyrsum += gyrvalue; 
 
@@ -254,32 +257,32 @@ void loop() {
 
 
 
-    // GyroSpeedInput = gyrsum / NSAMPLES; 
+    GyroSpeedInput = gyrsum / NSAMPLES; 
     // GyroSpeedInput = gyrsum/NSAMPLES;
-    GyroSpeedInput = gyros.z() * DEG_TO_RAD; 
+    // GyroSpeedInput = gyros.z() * DEG_TO_RAD/1.0; 
 
-    kp = analogRead(A15)/100.0; 
-    ki = analogRead(A16)/500.0; 
-    kd = analogRead(A17)/10.0; 
+    kp = analogRead(A15)/2000.0; 
+    ki = analogRead(A16)/10000.0; 
+    kd = analogRead(A17)*1.0; 
     // myattitudePID.SetTunings(kattp, katti, kattd);
 
     myspeedPID.SetTunings(kp, ki, kd);
 
     
-    HeadingSetpoint = analogRead(A14)/1024.* TWO_PI; 
+    // HeadingSetpoint = analogRead(A14)/1024.* TWO_PI; 
 
 
 
     #ifdef USEPID
-      myattitudePID.Compute(); 
+      // myattitudePID.Compute(); 
 
       myspeedPID.Compute();
       speed_pwm += PWMAccelOutput; 
       if (speed_pwm > 1){
         speed_pwm = 1;
       }
-      else if (speed_pwm < 0.1){
-        speed_pwm = 0.1; 
+      else if (speed_pwm < 0.4){
+        speed_pwm = 0.4; 
       }
       driver.setOutput(speed_pwm);
       // if (t > 20e3) HeadingSetpoint = 0; 
@@ -317,7 +320,7 @@ void loop() {
     write_line += magy;
     write_line += "\t";
     // write_line += ", head:";
-    write_line += HeadingInput;
+    write_line += 0; //HeadingInput;
     write_line += "\t";
     // write_line += ", gyr:";
     write_line += GyroSpeedInput;
@@ -334,7 +337,7 @@ void loop() {
     write_line += "\t";
     write_line += kd;
     write_line += "\t";
-    write_line += HeadingSetpoint;
+    write_line += 0; // HeadingSetpoint;
     write_line += "\t";
     
     // Print to serial monitor and file
