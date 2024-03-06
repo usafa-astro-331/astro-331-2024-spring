@@ -4,20 +4,14 @@ Previously, you determined the current and voltage limits of a 4-cell solar arra
 
 To measure the current and voltage provided by FlatSAT’s solar array, you must pick appropriate sensors. 
 
-
-
 Today you will create a voltage divider to scale FlatSAT's solar array output to a value that FlatSAT's Arduino flight computer can read safely. 
 
-
-
 You will also use a voltage divider and photoresistor/phototransistor to create a light sensor and perform basic calibration. 
-
-
 
 ## Overview
 
 - voltage measurement
-
+  
   - voltage divider
   - analog-to-digital converter (ADC)
   - calibration
@@ -26,17 +20,13 @@ You will also use a voltage divider and photoresistor/phototransistor to create 
 
 - Arduino basics
 
-  
-
-## Hardware 
+## Hardware
 
 - FlatSAT
   - Arduino MKR Zero
   - breadboard
   - resistors
   - photoresistor/phototransistor
-
-
 
 ## Equipment
 
@@ -45,30 +35,23 @@ You will also use a voltage divider and photoresistor/phototransistor to create 
 - Micro USB cable
 - multimeter
 
-
-
-## Software 
+## Software
 
 - Arduino IDE
+
 - SAMD drivers 
+  
   - if necessary tools -> board -> boards manager -> "SAMD" -> Arduino SAMD Boards -> install
 
 - `06_metrology.ino`
-
-
 
 ## Documentation
 
 - Arduino MKR datasheet
 
-
-
 ## Preliminary
 
 - git sync -> pull
-
-
-
 
 ## Solar arrays limits
 
@@ -79,15 +62,11 @@ For this lab, use these values as your solar array's max current and voltage.
 | current (mA) | 40     | 160      |
 | voltage (V)  | 30     | 7.5      |
 
-
-
 ## Voltage
 
 To accurately measure FlatSAT's solar array performance, your sensor must be able to measure DC voltage from 0–30 V. 
 
 Investigate this requirement. 
-
-
 
 ### Arduino limits
 
@@ -113,8 +92,8 @@ To map a 30 V signal to a 3.3 V sensor, you will use a voltage divider.
 
 ### Voltage Divider
 
->A **voltage divider** is a passive linear circuit that produces an output voltage $V_{out}$ that is a fraction of its input voltage $V_{in}$. **Voltage division** is the result of distributing the input voltage among the components of the divider. A simple example of a voltage divider is two resistors connected in series, with the input voltage applied across the resistor pair and the output voltage emerging from the connection between them.
->-[Wikipedia](https://en.wikipedia.org/wiki/Voltage_divider)
+> A **voltage divider** is a passive linear circuit that produces an output voltage $V_{out}$ that is a fraction of its input voltage $V_{in}$. **Voltage division** is the result of distributing the input voltage among the components of the divider. A simple example of a voltage divider is two resistors connected in series, with the input voltage applied across the resistor pair and the output voltage emerging from the connection between them.
+> -[Wikipedia](https://en.wikipedia.org/wiki/Voltage_divider)
 
 ![Resistive_divider2](sources/Resistive_divider2.svg)
 
@@ -133,18 +112,13 @@ Now you have to pick actual resistors and make a voltage divider. Use these equa
 - your resistors are 1/4 W resistors
 - **hint**: an ideal voltmeter has infinite resistance: should you pick large values for $R_1$ and $R_2$, or small values?
 
-
 Select resistors for R1 and R2. Ensure your resistors won't smoke or catch fire. Record these values (in your lab notebook). 
 
 **At this time, explain your choice to your instructor.** 
 
-
-
 Begin building FlatSAT. 
 
 **Note:** Do not connect your Arduino to power or to a computer at this time. 
-
-
 
 - Place the two resistors of your voltage divider
 - connect Vin of your voltage divider to a 30 V power supply
@@ -152,19 +126,13 @@ Begin building FlatSAT.
   - **don't connect this yet**
 - ground–ground–ground (voltage divider, Arduino, power supply)
 
-
-
 Set your benchtop power supply to 30 V/0.05 A. 
 
 Connect the power supply to the top and bottom of your voltage divider. 
 
-
-
 With your multimeter, measure the voltage between ground (black) and the center of your voltage divider (Vout)—it should be less than 3.3 V. 
 
 **Do not proceed until Ground–middle is ≤ 3.3 V**
-
-
 
 ### Arduino measurement
 
@@ -184,8 +152,6 @@ This line inserts a delay of 100 milliseconds between every run of loop(). This 
 
 This is acceptable for a simple program like this one, used to calibrate a sensor. However, FlatSAT constantly needs to accomplish and monitor multiple tasks, so it won't be acceptable in the future. 
 
-
-
 #### Measure!
 
 - Connect Arduino to your computer. 
@@ -195,8 +161,6 @@ This is acceptable for a simple program like this one, used to calibrate a senso
 
 Open the Arduino IDE's serial plotter (tools -> serial plotter). Select "value 2" and unselect "value 1." 
 
-
-
 The serial plotter will show a moving graph. Adjust the power supply **downward only** and watch the plotted line move. As the power supply moves from 30 V–0 V, Arduino sees from 3.3 V–0V. What range of values does the serial plotter display? 
 
 This is because of the Arduino’s 12-bit ADC resolution. You must add a scale factor to output the correct voltage. 
@@ -205,13 +169,13 @@ Arduino's default ADC resolution is 10-bit. This lab uses the command `analogRea
 
 With an input range of 0–3.3 V and 12-bit/4096 count, Arduino's sensitivity is 0.8 mV/count (3.3V/4096 count). 
 
-​	To properly display Arduino's measured voltage in mV, you must multiply the ADC reading `volt_counts` by 0.8. 
+​    To properly display Arduino's measured voltage in mV, you must multiply the ADC reading `volt_counts` by 0.8. 
 
 However, you instead want to display the voltage of your solar array/solar array simulator. You must **multiply the measured voltage** by the ratio of your voltage divider. 
 
 Note: For this calculation, use measured resistance values for R1 and R2 rather than their specification values. 
 
-$voltage = volt\_ counts * \left(\frac{0.8\ mV}{count} * \frac{R_1}{R_1+R_2}\right)$ 
+$voltage = volt\_ counts * \left(\frac{0.8\ mV}{count} * \frac{R_1+R_2}{R_2}\right)$ 
 
 Calculate this factor and change the following code line to include the proper scale factor instead of 1. 
 
@@ -228,8 +192,6 @@ Congratulations! You can measure voltage!
 - turn off the benchtop power supply (on/off button not illuminated)
 - disconnect Arduino
 
-
-
 ## Sun Sensor
 
 There are many ways to determine a spacecraft's orientation to the sun. You will create a light sensor that can be used in a sun sensor. 
@@ -242,20 +204,13 @@ Change this code back to its original value (as shown below).
 volts = volt_counts * 1.0;
 ```
 
-
-
 Connect Arduino, upload the code, and view the value on the serial monitor. Cover the photoresistor/phototransistor with your hands and watch the value change. 
 
 Using the values in complete darkness and bright light (sunlight if possible), determine a calibration curve to distinguish darkness, dim light, and bright light.
 
-
-
 If you had multiple photoresistors/phototransistors you could measure their relative brightnesses to determine the sun's location. 
 
-
-
-
-
 ## Cleanup
+
 - disconnect Arduino and place in your team's drawer
 - turn off multimeter
