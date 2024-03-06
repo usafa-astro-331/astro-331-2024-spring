@@ -1,5 +1,3 @@
-#define USEPID
-
 #define SERIAL_PORT Serial
 #define WIRE_PORT Wire  // Your desired Wire port.      Used when "USE_SPI" is not defined
 
@@ -177,6 +175,9 @@ void loop() {
     HeadingInput = atan2(magy, -magx) +PI; 
     dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
 
+    
+
+    #ifdef USEPID
     kp = analogRead(A15)/100.0; 
     ki = analogRead(A16)/500.0; 
     kd = analogRead(A17)/10.0; 
@@ -185,8 +186,6 @@ void loop() {
     HeadingSetpoint = analogRead(A14)/1024.* TWO_PI; 
 
 
-
-    #ifdef USEPID
       myPID.Compute(); 
       speed_pwm = Output; 
       driver.setOutput(Output);
