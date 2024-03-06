@@ -26,7 +26,7 @@
   #include <QuadratureEncoder.h>
   // NOTE: QuadratureEncoder requires <EnableInterrupt.h>
   #endif
-  #include "motor_controller_pins.h"
+  #include "motor_setup.h"
   // Instantiate TB9051FTGMotorCarrier
     static TB9051FTGMotorCarrier driver{ pwm1Pin, pwm2Pin };
   // set up variable for pulse width modulation of motor
