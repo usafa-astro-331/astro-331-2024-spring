@@ -64,21 +64,21 @@ float speed_pwm;
 int current_time = 0;
 int elapsed = 0;
 
-// // PID 
-// #include "src/PID/attitude_PID.h"
-// double kattp=50.0, katti=5.0, kattd=0.0; 
-// double HeadingSetpoint, HeadingInput, dHeadingInput, AttitudeSpeedOutput; 
-// attitudePID myattitudePID(&HeadingInput, &dHeadingInput, &AttitudeSpeedOutput, &HeadingSetpoint, kattp, katti, kattd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
-// //                                                             //P_ON_E (Proportional on Error) is the default behavior
+// PID 
+#include "src/PID/attitude_PID.h"
+double kattp=50.0, katti=5.0, kattd=0.0; 
+double HeadingSetpoint, HeadingInput, dHeadingInput, AttitudeSpeedOutput; 
+attitudePID myattitudePID(&HeadingInput, &dHeadingInput, &AttitudeSpeedOutput, &HeadingSetpoint, 0.0, 0.0, 0.0, P_ON_E, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
+//                                                             //P_ON_E (Proportional on Error) is the default behavior
 
 
 #include <PID_v1.h>
-double kp=10.0, ki=0.0, kd=1e4.0; 
+double kp=10.0, ki=0.0, kd=1.0e4; 
 double  GyroSpeedInput, PWMAccelOutput; 
 // double GyroSpeedSetpoint = 0.0;
 // double GyroSpeedSetpoint = &AttitudeSpeedOutput;  
 double spacecraftSpeedSetpoint = 0.0; 
-PID myspeedPID(&GyroSpeedInput, &PWMAccelOutput, &spacecraftSpeedSetpoint, kp, ki, kd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
+PID myspeedPID(&GyroSpeedInput, &PWMAccelOutput, &AttitudeSpeedOutput, kp, ki, kd, P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
 
 
 void setup() {
@@ -176,8 +176,12 @@ delay(1000);
 // dHeadingInput = -myICM.gyrZ() * DEG_TO_RAD; // neg b/c gyrz = -magz on ICM_20948
 // HeadingSetpoint = HALF_PI; 
 // Output = 0.5; 
-// myattitudePID.SetOutputLimits(0.1, 1);
-// myattitudePID.SetMode(AUTOMATIC); 
+
+imu::Vector<3> mags = bno.getVector(Adafruit_BNO055::VECTOR_MAGNETOMETER);
+HeadingInput = atan2(mags.y(), -mags.x()) +PI; 
+
+myattitudePID.SetOutputLimits(-100, 100);
+myattitudePID.SetMode(AUTOMATIC); 
 
 myspeedPID.SetOutputLimits(-0.02, 0.02);
 myspeedPID.SetSampleTime(10);
@@ -212,7 +216,7 @@ void loop() {
 
   imu::Vector<3> gyros = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
   imu::Vector<3> mags = bno.getVector(Adafruit_BNO055::VECTOR_MAGNETOMETER);
-
+  HeadingInput = atan2(mags.y(), -mags.x()) +PI; 
 
   
     myICM.getAGMT();  // The values are only updated when you call 'getAGMT'
@@ -264,20 +268,20 @@ void loop() {
     // GyroSpeedInput = gyrsum/NSAMPLES;
     // GyroSpeedInput = gyros.z() * DEG_TO_RAD/1.0; 
 
-    // kp = analogRead(A15)/50.0; 
-    // ki = analogRead(A16)/500.0; 
-    // kd = analogRead(A17)*10.0; 
-    // myattitudePID.SetTunings(kattp, katti, kattd);
+    kattp = analogRead(A15)/500.0; 
+    katti = analogRead(A16)/5000.0; 
+    kattd = analogRead(A17)*10.0 - 250.0; 
+    myattitudePID.SetTunings(kattp, katti, kattd);
 
-    myspeedPID.SetTunings(kp, ki, kd);
+    // myspeedPID.SetTunings(kp, ki, kd);
 
     
-    // HeadingSetpoint = analogRead(A14)/1024.* TWO_PI; 
+    HeadingSetpoint = analogRead(A14)/1024.* TWO_PI; 
 
 
 
     #ifdef USEPID
-      // myattitudePID.Compute(); 
+      myattitudePID.Compute(); 
 
       computed = myspeedPID.Compute();
       if (computed){
@@ -330,7 +334,7 @@ void loop() {
     write_line += magy;
     write_line += "\t";
     // write_line += ", head:";
-    write_line += 0; //HeadingInput;
+    write_line += HeadingInput;
     write_line += "\t";
     // write_line += ", gyr:";
     write_line += GyroSpeedInput;
@@ -341,13 +345,15 @@ void loop() {
     // write_line += ", ω_meas:";
     write_line += w_meas;
     write_line += "\t";
-    write_line += kp;
+    write_line += kattp;
     write_line += "\t";
-    write_line += ki;
+    write_line += katti;
     write_line += "\t";
-    write_line += kd;
+    write_line += kattd;
     write_line += "\t";
-    write_line += 0; // HeadingSetpoint;
+    write_line += HeadingSetpoint;
+    write_line += "\t";
+    write_line += AttitudeSpeedOutput;
     write_line += "\t";
     
     // Print to serial monitor and file
