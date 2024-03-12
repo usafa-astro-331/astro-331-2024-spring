@@ -63,6 +63,10 @@ These characteristics are all wavelength-dependent, but are often summarized to 
 - absorptivity: solar wavelengths
 - emissivity: IR wavelengths
 
+
+
+![](sources/absorptivity_emissivity.png)
+
 #### heat sources
 
 | source                   | average <br />flux (W/m^2^) | where |
@@ -82,7 +86,8 @@ These characteristics are all wavelength-dependent, but are often summarized to 
 - conduction
 - radiation
 - 
-- ablation
+- evaporation/sublimation/ablation 
+  - (not technically heat transfer, but close enough for astro engineering)
 
 ### radiation
 
@@ -126,11 +131,15 @@ $$
 ## Astro 331 model
 
 - model deployed solar arrays separately from spacecraft
+
 - find worst-case hot and cold
+
 - uniform power dissipation
 
 - solar arrays are flat plates
+
 - spacecraft is isothermal sphere (same area as real spacecraft)
+  
   - radiates from all surfaces
   - absorbs on one projected side (1/4 of total area)
 
@@ -164,5 +173,3 @@ $$
 | array back  | 0.975    | 0.874              |
 
 find hot and cold equilibrium temperature for spacecraft and solar arrays
-
-# 
